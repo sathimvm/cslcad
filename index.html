@@ -1,0 +1,3869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ShipView3D · Professional CAD Edition</title>
+  <link rel="stylesheet" href="./css/styles.css">
+
+</head>
+<body>
+
+<!-- ===== SECTION 21: HTML STRUCTURE ===== -->
+
+<div id="canvas-container"></div>
+
+<div id="magnifier-lens">
+  <canvas id="mag-canvas"></canvas>
+</div>
+
+<!-- FILE BAR -->
+<div id="file-bar">
+  <span style="font-weight:bold; color:var(--tb-text); opacity:0.6;">Files:</span>
+  <span id="file-list"></span>
+  <span style="flex:1;"></span>
+  <span style="display:flex; gap:4px; align-items:center;">
+    <span class="material-icons" style="font-size:16px; cursor:pointer; color:var(--tb-text); opacity:0.5;" onclick="App.showThemePanel()">palette</span>
+  </span>
+</div>
+
+<!-- MEASURE TOOLBAR -->
+<div id="measure-toolbar">
+  <button class="measure-btn active" id="btn-meas-distance" onclick="MeasureTool.setMode('distance')"><span class="material-icons">straighten</span> Tape</button>
+  <button class="measure-btn" id="btn-meas-coord" onclick="MeasureTool.setMode('coord')"><span class="material-icons">place</span> Coordinates</button>
+  <button class="measure-btn" onclick="MeasureTool.clear()"><span class="material-icons">delete</span> Clear</button>
+</div>
+
+<!-- ZOOM EXTENTS -->
+<button id="zoom-extents-btn" title="Zoom Extents (Space)" onclick="Camera.zoomExtents()">
+  <span class="material-icons">zoom_out_map</span>
+</button>
+
+<!-- MEASURE LABELS CONTAINER -->
+<div id="measure-labels-container"></div>
+<div id="measure-cursor"><span class="material-icons">straighten</span></div>
+
+<!-- SECTION CUT SLIDER PANEL -->
+<div id="cut-slider-panel">
+  <button class="close-slider-btn" onclick="document.getElementById('cut-slider-panel').style.display='none'">✕</button>
+  <div class="panel-title-small">Section Cuts (drag to adjust)</div>
+  <div id="cut-slider-rows"></div>
+</div>
+
+<!-- CONTEXT MENU -->
+<div id="context-menu">
+  <button class="menu-item" data-action="zoom"><span class="material-icons">zoom_in</span> Zoom Selected</button>
+  <button class="menu-item" data-action="isolate"><span class="material-icons">filter_center_focus</span> Isolate</button>
+  <div class="menu-divider"></div>
+  <button class="menu-item" data-action="hide"><span class="material-icons">visibility_off</span> Hide</button>
+  <button class="menu-item" data-action="unhide"><span class="material-icons">visibility</span> Unhide Last</button>
+  <button class="menu-item" data-action="unhide-all"><span class="material-icons">visibility</span> Unhide All</button>
+</div>
+
+<!-- ACTIONS ICON BAR (right side) -->
+<div id="actions-bar">
+  <div class="action-item" data-action="zoom">
+    <button class="icon-btn" data-action="zoom" title="Zoom Selected"><span class="material-icons">zoom_in</span></button>
+  </div>
+  <div class="action-item" data-action="isolate">
+    <button class="icon-btn" data-action="isolate" title="Isolate"><span class="material-icons">filter_center_focus</span></button>
+  </div>
+  <div class="action-item" data-action="hide">
+    <button class="icon-btn" data-action="hide" title="Hide"><span class="material-icons">visibility_off</span></button>
+  </div>
+  <div class="action-item" data-action="unhide">
+    <button class="icon-btn" data-action="unhide" title="Unhide Last"><span class="material-icons">visibility</span></button>
+  </div>
+  <div class="action-item" data-action="unhide-all">
+    <button class="icon-btn" data-action="unhide-all" title="Unhide All"><span class="material-icons">visibility</span></button>
+  </div>
+</div>
+
+<!-- MAIN TOOLBAR -->
+<div id="toolbar">
+  <button class="toolButton" onclick="UI.togglePanel('panel-projects')">
+    <span class="material-icons">snippet_folder</span><span class="label">Projects</span>
+  </button>
+  <button class="toolButton" onclick="App.openFile()">
+    <span class="material-icons">folder_open</span><span class="label">Open</span>
+  </button>
+  <button class="toolButton" onclick="App.addFile()">
+    <span class="material-icons">add</span><span class="label">Add</span>
+  </button>
+  <button class="toolButton active" id="btn-select" onclick="App.setTool('select')">
+    <span class="material-icons">near_me</span><span class="label">Select</span>
+  </button>
+  <button class="toolButton" id="btn-measure" onclick="App.setTool('measure')">
+    <span class="material-icons">straighten</span><span class="label">Measure</span>
+  </button>
+  
+  <div style="height:1px;width:40px;background:var(--panel-border);margin:8px 0;"></div>
+
+  <button class="toolButton" onclick="UI.togglePanel('panel-camera')">
+    <span class="material-icons">video_camera_back</span><span class="label">Camera</span>
+  </button>
+  <button class="toolButton" onclick="UI.togglePanel('panel-scenes')">
+    <span class="material-icons">photo_library</span><span class="label">Scenes</span>
+  </button>
+  <button class="toolButton" onclick="UI.togglePanel('panel-view')">
+    <span class="material-icons">visibility</span><span class="label">View</span>
+  </button>
+  <button class="toolButton" onclick="UI.togglePanel('panel-section')">
+    <span class="material-icons">content_cut</span><span class="label">Section</span>
+  </button>
+  <button class="toolButton" onclick="UI.togglePanel('panel-colors')">
+    <span class="material-icons">palette</span><span class="label">Colors</span>
+  </button>
+  <button class="toolButton" onclick="UI.togglePanel('panel-outliner')">
+    <span class="material-icons">account_tree</span><span class="label">Outliner</span>
+  </button>
+  <button class="toolButton" onclick="UI.togglePanel('panel-search')">
+    <span class="material-icons">search</span><span class="label">Search</span>
+  </button>
+  <button class="toolButton" onclick="UI.togglePanel('panel-info')">
+    <span class="material-icons">info</span><span class="label">Info</span>
+  </button>
+</div>
+
+<!-- ===== SECTION 22: CAMERA PANEL ===== -->
+<div id="panel-camera" class="side-panel">
+  <div class="panelTitle">Camera Tools <button class="panelClose" onclick="UI.togglePanel('panel-camera')"><span class="material-icons">close</span></button></div>
+  <div class="sectionHeader">Speeds</div>
+  <div class="control-group">
+    <label>Orbit Speed <span class="value-display" id="orbit-speed-val">1.0</span></label>
+    <input type="range" min="0.1" max="3" step="0.1" value="1.0" oninput="App.setControlSpeed('rotate', this.value)">
+  </div>
+  <div class="control-group">
+    <label>Zoom Speed <span class="value-display" id="zoom-speed-val">1.0</span></label>
+    <input type="range" min="0.1" max="3" step="0.1" value="1.0" oninput="App.setControlSpeed('zoom', this.value)">
+  </div>
+  <div class="sectionHeader">Projection</div>
+  <div class="panelItem selected" id="cam-perspective" onclick="Camera.setProjection('perspective')">Perspective <div class="red-check">✔</div></div>
+  <div class="panelItem" id="cam-orthographic" onclick="Camera.setProjection('orthographic')">Orthographic (CAD) <div class="red-check">✔</div></div>
+  <div class="sectionHeader">Navigation</div>
+  <div class="panelItem selected" id="nav-orbit" onclick="App.setNavMode('orbit')">Orbit <div class="red-check">✔</div></div>
+  <div class="panelItem" id="nav-pan" onclick="App.setNavMode('pan')">Pan <div class="red-check">✔</div></div>
+  <div class="panelItem" id="nav-zoom" onclick="App.setNavMode('zoom')">Drag Zoom <div class="red-check">✔</div></div>
+  <div class="panelItem" id="nav-position" onclick="App.setNavMode('position')">Position Camera <div class="red-check">✔</div></div>
+  <div class="panelItem" id="nav-look" onclick="App.setNavMode('look')">Look Around <div class="red-check">✔</div></div>
+</div>
+
+<!-- ===== SECTION 23: SCENES PANEL ===== -->
+<div id="panel-scenes" class="side-panel">
+  <div class="panelTitle">Scenes <button class="panelClose" onclick="UI.togglePanel('panel-scenes')"><span class="material-icons">close</span></button></div>
+  <div class="sectionHeader">Standard Views</div>
+  <div class="panelItem" onclick="Camera.zoomExtents()">Zoom Extents</div>
+  <div class="panelItem" onclick="Camera.isometric()">Isometric</div>
+  <div class="panelItem" onclick="Camera.top()">Top</div>
+  <div class="panelItem" onclick="Camera.bottom()">Bottom</div>
+  <div class="panelItem" onclick="Camera.front()">Front</div>
+  <div class="panelItem" onclick="Camera.back()">Back</div>
+  <div class="panelItem" onclick="Camera.left()">Left</div>
+  <div class="panelItem" onclick="Camera.right()">Right</div>
+</div>
+
+<!-- ===== SECTION 24: VIEW PANEL ===== -->
+<div id="panel-view" class="side-panel">
+  <div class="panelTitle">View Options <button class="panelClose" onclick="UI.togglePanel('panel-view')"><span class="material-icons">close</span></button></div>
+  
+  <!-- Display Profile -->
+  <div class="sectionHeader">Display Profile</div>
+  <div id="profile-controls">
+    <label>Screen Size <span class="value-display" id="screen-size-val">24"</span></label>
+    <input type="range" id="screen-size-slider" min="5" max="40" step="1" value="24" oninput="App.updateDisplayProfile(this.value)">
+    <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="slider-pick-btn" onclick="App.setDisplayProfile('mobile')">📱 Mobile</button>
+      <button class="slider-pick-btn" onclick="App.setDisplayProfile('laptop')">💻 Laptop</button>
+      <button class="slider-pick-btn" onclick="App.setDisplayProfile('desktop')">🖥️ Desktop</button>
+      <button class="slider-pick-btn" onclick="App.setDisplayProfile('cinema')">🎬 Cinema</button>
+    </div>
+    
+    <label style="margin-top:12px;">Thick Line Weight (px) <span class="value-display" id="thick-line-val">2.0</span></label>
+    <input type="range" id="thick-line-slider" min="0.5" max="8" step="0.5" value="2.0" oninput="App.updateThickLine(this.value)">
+    <div class="profile-row" style="margin-top:6px;">
+      <label>Manual Value:</label>
+      <input type="number" id="thick-line-input" value="2.0" step="0.5" min="0.5" max="8" onchange="App.updateThickLine(this.value)">
+    </div>
+  </div>
+
+  <!-- Edge Line Color -->
+  <div class="sectionHeader">Edge Line Color</div>
+  <div class="control-group">
+    <label>Mode:</label>
+    <select id="edge-color-mode" style="width:100%; padding:6px; background:var(--input-bg); color:var(--panel-text); border:1px solid var(--input-border); border-radius:4px;" onchange="App.updateEdgeColors()">
+      <option value="solid">All Same (Solid)</option>
+      <option value="material">By Material</option>
+      <option value="axis">By Axis (XYZ)</option>
+    </select>
+  </div>
+  <div class="control-group" id="edge-solid-color-group">
+    <label>Solid Color <input type="color" id="edge-solid-color" value="#000000" onchange="App.updateEdgeColors()" style="float:right; width:30px; height:24px; padding:0; border:none;"></label>
+  </div>
+
+  <!-- Cut Fill -->
+  <div class="sectionHeader">Section Cut Style</div>
+  <div class="control-group">
+    <label style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+      <span>Enable Section Edge</span>
+      <input type="checkbox" id="enable-section-edge" checked onchange="ViewEngine.toggleSectionEdgeEnabled()">
+    </label>
+  </div>
+  <div class="control-group">
+    <label>Section Edge Color <input type="color" id="section-edge-color" value="#ff1744" onchange="ViewEngine.updateSectionEdgeColor()" style="float:right; width:30px; height:24px; padding:0; border:none;"></label>
+  </div>
+  <div class="control-group">
+    <label>Section Cut Line Weight (px) <input type="range" id="section-edge-weight" min="0.5" max="8" step="0.5" value="2.0" oninput="ViewEngine.updateSectionEdgeLineWeight(this.value)" style="float:right; width:140px;"> <input type="number" id="section-edge-weight-input" value="2.0" step="0.5" min="0.5" max="8" onchange="(function(v){document.getElementById('section-edge-weight').value=v;ViewEngine.updateSectionEdgeLineWeight(v);} )(this.value)" style="width:60px; margin-left:6px;"></label>
+  </div>
+
+  <!-- Explode -->
+  <div class="sectionHeader">Explode Assembly</div>
+  <div class="control-group" style="padding-bottom:0; border-bottom:none;">
+    <label>Explode By:</label>
+    <select id="explode-by" style="width:100%; padding:6px; background:var(--input-bg); color:var(--panel-text); border:1px solid var(--input-border); border-radius:4px;" onchange="ViewEngine.setExplode(document.getElementById('explode-slider').value)">
+      <option value="part">Individual Part</option>
+      <option value="subAssy">Sub Assembly</option>
+      <option value="midAssy">Mid Assembly (Panel)</option>
+      <option value="grade">Grade / Material</option>
+      <option value="thickness">Thickness</option>
+    </select>
+  </div>
+  <div class="control-group">
+    <label>Distance <span class="value-display" id="explode-val">0%</span></label>
+    <input type="range" id="explode-slider" min="0" max="100" value="0" oninput="ViewEngine.setExplode(this.value)">
+  </div>
+
+  <!-- Face Style -->
+  <div class="sectionHeader">Face Style</div>
+  <div class="panelItem selected" id="style-shaded" onclick="ViewEngine.setFaceStyle('shaded')">Shaded <div class="red-check">✔</div></div>
+  <div class="panelItem" id="style-xray" onclick="ViewEngine.setFaceStyle('xray')">X-Ray <div class="red-check">✔</div></div>
+  <div class="panelItem" id="style-wireframe" onclick="ViewEngine.setFaceStyle('wireframe')">Wireframe <div class="red-check">✔</div></div>
+  <div class="sectionHeader">Shading</div>
+  <div class="panelItem selected" id="shade-smooth" onclick="ViewEngine.setShadingModel(false)">Smooth <div class="red-check">✔</div></div>
+  <div class="panelItem" id="shade-flat" onclick="ViewEngine.setShadingModel(true)">Flat (CAD) <div class="red-check">✔</div></div>
+  <div class="sectionHeader">Display</div>
+  <div class="panelItem selected" id="style-edges" onclick="ViewEngine.toggleEdges()">Edges <div class="red-check">✔</div></div>
+  <div class="panelItem selected" id="style-axes" onclick="ViewEngine.toggleAxes()">World Axes <div class="red-check">✔</div></div>
+  <div class="panelItem" id="shadow-toggle" onclick="ViewEngine.toggleShadows()">Shadows <div class="red-check">✔</div></div>
+  
+  <!-- Sunlight -->
+  <div class="sectionHeader">Sunlight</div>
+  <div class="control-group">
+    <label>Azimuth <span class="value-display" id="sun-azimuth-val">45°</span></label>
+    <input type="range" id="sun-azimuth" min="0" max="360" value="45" oninput="App.updateSun()">
+  </div>
+  <div class="control-group">
+    <label>Elevation <span class="value-display" id="sun-elevation-val">30°</span></label>
+    <input type="range" id="sun-elevation" min="0" max="90" value="30" oninput="App.updateSun()">
+  </div>
+  <div class="control-group">
+    <label>Intensity <span class="value-display" id="sun-intensity-val">100%</span></label>
+    <input type="range" id="sun-intensity" min="0" max="200" value="100" oninput="App.updateSun()">
+  </div>
+
+  <!-- Selection & Theme -->
+  <div class="sectionHeader">Selection Color</div>
+  <div class="panelItem" style="justify-content:space-between;">
+    <span>Highlight</span>
+    <input type="color" id="selection-color-picker" value="#ef5350" style="width:40px;height:30px;border:none;padding:0;background:none;cursor:pointer;" onchange="App.setSelectionColor(this.value)">
+  </div>
+  
+  <div class="sectionHeader">Theme</div>
+  <div id="theme-list" style="padding: 8px 20px; display: flex; flex-wrap: wrap; gap: 6px;"></div>
+</div>
+
+<!-- ===== SECTION 25: SECTION PANEL ===== -->
+<div id="panel-section" class="side-panel">
+  <div class="panelTitle">Section Cuts <button class="panelClose" onclick="UI.togglePanel('panel-section')"><span class="material-icons">close</span></button></div>
+
+  <div class="sectionHeader" style="display:flex; justify-content:space-between; align-items:center;">
+      Anywhere Surface Slicer
+      <button class="slider-pick-btn" id="btn-section-custom" onclick="App.setTool('section-custom')"><span class="material-icons" style="font-size:16px;">ads_click</span> Plane Pick</button>
+  </div>
+  <div class="control-group">
+    <div class="axis-control" id="custom-plane-ui" style="display:none; color:#4caf50;">
+      <label><input type="checkbox" id="cut-c-enable" onchange="SectionManager.apply()" checked> Active Plane</label>
+      <label>Reverse <input type="checkbox" id="cut-c-reverse" onchange="SectionManager.apply()"></label>
+      <button class="slider-pick-btn" onclick="SectionManager.clearCustomPlane()">Clear</button>
+    </div>
+    <div id="custom-plane-hint" style="font-size:12px; opacity:0.6;">Click 'Plane Pick', hold, and drag over any 3D face to slice along its angle.</div>
+  </div>
+
+  <div class="sectionHeader">X-Axis</div>
+  <div class="control-group">
+    <div class="axis-control">
+      <label><input type="checkbox" id="cut-x-enable" onchange="SectionManager.onEnable('x')"> Enable</label>
+      <label>Reverse <input type="checkbox" id="cut-x-reverse" onchange="SectionManager.onEnable('x')"></label>
+      <label>Value: <input type="number" id="cut-x-value" value="0" step="1" style="width:80px;" onchange="SectionManager.onValue('x', this.value)"></label>
+      <button class="slider-pick-btn" id="btn-pick-x" onclick="App.setPickPlane('x')"><span class="material-icons" style="font-size:14px;">ads_click</span> Pick</button>
+    </div>
+  </div>
+  <div class="sectionHeader">Y-Axis</div>
+  <div class="control-group">
+    <div class="axis-control">
+      <label><input type="checkbox" id="cut-y-enable" onchange="SectionManager.onEnable('y')"> Enable</label>
+      <label>Reverse <input type="checkbox" id="cut-y-reverse" onchange="SectionManager.onEnable('y')"></label>
+      <label>Value: <input type="number" id="cut-y-value" value="0" step="1" style="width:80px;" onchange="SectionManager.onValue('y', this.value)"></label>
+      <button class="slider-pick-btn" id="btn-pick-y" onclick="App.setPickPlane('y')"><span class="material-icons" style="font-size:14px;">ads_click</span> Pick</button>
+    </div>
+  </div>
+  <div class="sectionHeader">Z-Axis</div>
+  <div class="control-group">
+    <div class="axis-control">
+      <label><input type="checkbox" id="cut-z-enable" onchange="SectionManager.onEnable('z')"> Enable</label>
+      <label>Reverse <input type="checkbox" id="cut-z-reverse" onchange="SectionManager.onEnable('z')"></label>
+      <label>Value: <input type="number" id="cut-z-value" value="0" step="1" style="width:80px;" onchange="SectionManager.onValue('z', this.value)"></label>
+      <button class="slider-pick-btn" id="btn-pick-z" onclick="App.setPickPlane('z')"><span class="material-icons" style="font-size:14px;">ads_click</span> Pick</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 26: COLORS PANEL ===== -->
+<div id="panel-colors" class="side-panel">
+  <div class="panelTitle">Color Mapping <button class="panelClose" onclick="UI.togglePanel('panel-colors')"><span class="material-icons">close</span></button></div>
+  <div class="sectionHeader">Strategy</div>
+  <div class="panelItem" style="flex-direction:column;align-items:stretch;padding:10px 20px;">
+    <select id="colorModeSelect" style="padding:8px;font-size:14px;border-radius:4px;background:var(--input-bg);color:var(--panel-text);border:1px solid var(--input-border);" onchange="ColorManager.onModeChange()">
+      <option value="NativeColor" selected>Native (Original) Color</option>
+      <option value="Prefix">Prefix (W, T, BP...)</option>
+      <option value="Grade">Grade / Material</option>
+      <option value="Thickness">Thickness</option>
+      <option value="MidAssy">Mid Assy (Panel)</option>
+      <option value="SubAssy">Sub Assy</option>
+      <option value="PartNumber">Individual Part</option>
+    </select>
+  </div>
+  <div class="color-toggle-header">
+    <span>Assignments</span>
+    <span class="toggle-icon material-icons" onclick="ColorManager.toggleList()">expand_less</span>
+  </div>
+  <div id="color-mapping-list" style="max-height:400px;overflow-y:auto;"></div>
+</div>
+
+<!-- ===== SECTION 27: OUTLINER PANEL ===== -->
+<div id="panel-outliner" class="side-panel">
+  <div class="panelTitle">Outliner <button class="panelClose" onclick="UI.togglePanel('panel-outliner')"><span class="material-icons">close</span></button></div>
+  <div id="outliner-content" style="padding-bottom:20px;">
+    <div class="panelItem" style="justify-content:center;color:var(--panel-text);opacity:0.6;">Load a file to view assembly.</div>
+  </div>
+</div>
+
+<!-- ===== SECTION 27.5: PROJECTS PANEL ===== -->
+<div id="panel-projects" class="side-panel">
+  <div class="panelTitle">Projects <button class="panelClose" onclick="UI.togglePanel('panel-projects')"><span class="material-icons">close</span></button></div>
+  <div class="sectionHeader">Projects Folder</div>
+    <div class="control-group" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <button class="slider-pick-btn" onclick="document.getElementById('projectsDirInput').click()">Load Projects Folder</button>
+    <button class="slider-pick-btn" onclick="document.getElementById('projectsUploadInput').click()">Upload Files</button>
+  </div>
+  <div class="control-group" style="padding-top:6px;">
+    <div id="project-container"><div style="padding:12px;color:var(--panel-text);opacity:0.6;">No folder loaded. Click 'Load Projects Folder'.</div></div>
+  </div>
+</div>
+
+<!-- ===== SECTION 28: SEARCH PANEL ===== -->
+<div id="panel-search" class="side-panel">
+  <div class="panelTitle">Search <button class="panelClose" onclick="UI.togglePanel('panel-search')"><span class="material-icons">close</span></button></div>
+  <div class="search-container">
+    <input type="text" id="searchInput" class="search-input" placeholder="Part No (e.g. W41)">
+    <button class="search-btn" onclick="Search.execute()">Isolate Part</button>
+    <button class="search-btn secondary" onclick="Search.reset()">Show All</button>
+    <div id="search-results" style="margin-top:14px;font-weight:500;color:var(--panel-text);"></div>
+  </div>
+</div>
+
+<!-- ===== SECTION 29: INFO PANEL ===== -->
+<div id="panel-info" class="side-panel">
+  <div class="panelTitle">Entity Info <button class="panelClose" onclick="UI.togglePanel('panel-info')"><span class="material-icons">close</span></button></div>
+  <table style="width:100%;border-collapse:collapse;font-size:14px;" id="info-content">
+    <tr><td style="padding:18px;text-align:center;color:var(--panel-text);opacity:0.6;">Select a part in 3D (Shift+Click for multi)</td></tr>
+  </table>
+</div>
+
+<!-- ===== SECTION 30: STATUS BAR ===== -->
+<div id="statusbar">
+  <div class="left">
+    <span id="statusTool">Mode: Orbit</span>
+    <span id="selected-part-name">None</span>
+  </div>
+  <div class="right">
+    <span id="coord-readout">X: 0.00  Y: 0.00  Z: 0.00</span>
+  </div>
+</div>
+
+<!-- FILE INPUT -->
+<input type="file" id="fileInput" style="display:none;" accept=".3dd,.3dcsl,application/octet-stream" multiple />
+<!-- Projects directory picker (local fallback) -->
+<input type="file" id="projectsDirInput" style="display:none;" webkitdirectory directory multiple />
+<input type="file" id="projectsUploadInput" style="display:none;" multiple />
+
+<!-- Simple file viewer for opened project files -->
+<div id="project-file-viewer" style="display:none; position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); width:80%; height:70%; background:var(--panel-bg); border:1px solid var(--panel-border); z-index:9999; padding:12px; box-shadow:0 8px 32px var(--shadow);">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div style="font-weight:700;color:var(--panel-text);" id="viewer-filename"></div>
+    <div><button class="slider-pick-btn" onclick="document.getElementById('project-file-viewer').style.display='none'">Close</button></div>
+  </div>
+  <div id="viewer-content" style="margin-top:8px; overflow:auto; height:calc(100% - 40px); background:#0f0f0f; color:#e8e8e8; padding:10px; border-radius:6px; white-space:pre-wrap; font-family:monospace;"></div>
+</div>
+<div id="loader">
+  <span id="loader-icon">⏳</span> 
+  <span id="loader-text">Parsing .3DD …</span>
+</div>
+
+<!-- ===== SECTION 31: THREE.JS IMPORTS (local core + OrbitControls) ===== -->
+<script src="./js/lib/three.min.js"></script>
+<script src="./js/sectionManager.js"></script>
+<script src="./js/config.js"></script>
+<script src="./js/idb-storage.js"></script>
+<script src="./js/main.js"></script>
+<script src="./js/measure.js"></script>
+
+<script>
+( function () {
+
+  // Unlike TrackballControls, it maintains the "up" direction object.up (+Y by default).
+  //
+  //    Orbit - left mouse / touch: one-finger move
+  //    Zoom - middle mouse, or mousewheel / touch: two-finger spread or squish
+  //    Pan - right mouse, or left mouse + ctrl/meta/shiftKey, or arrow keys / touch: two-finger move
+
+  const _changeEvent = {
+    type: 'change'
+  };
+  const _startEvent = {
+    type: 'start'
+  };
+  const _endEvent = {
+    type: 'end'
+  };
+
+  class OrbitControls extends THREE.EventDispatcher {
+
+    constructor( object, domElement ) {
+
+      super();
+      if ( domElement === undefined ) console.warn( 'THREE.OrbitControls: The second parameter "domElement" is now mandatory.' );
+      if ( domElement === document ) console.error( 'THREE.OrbitControls: "document" should not be used as the target "domElement". Please use "renderer.domElement" instead.' );
+      this.object = object;
+      this.domElement = domElement; // Set to false to disable this control
+
+      this.enabled = true; // "target" sets the location of focus, where the object orbits around
+
+      this.target = new THREE.Vector3(); // How far you can dolly in and out ( PerspectiveCamera only )
+
+      this.minDistance = 0;
+      this.maxDistance = Infinity; // How far you can zoom in and out ( OrthographicCamera only )
+
+      this.minZoom = 0;
+      this.maxZoom = Infinity; // How far you can orbit vertically, upper and lower limits.
+      // Range is 0 to Math.PI radians.
+
+      this.minPolarAngle = 0; // radians
+
+      this.maxPolarAngle = Math.PI; // radians
+      // How far you can orbit horizontally, upper and lower limits.
+      // If set, the interval [ min, max ] must be a sub-interval of [ - 2 PI, 2 PI ], with ( max - min < 2 PI )
+
+      this.minAzimuthAngle = - Infinity; // radians
+
+      this.maxAzimuthAngle = Infinity; // radians
+      // Set to true to enable damping (inertia)
+      // If damping is enabled, you must call controls.update() in your animation loop
+
+      this.enableDamping = false;
+      this.dampingFactor = 0.05; // This option actually enables dollying in and out; left as "zoom" for backwards compatibility.
+      // Set to false to disable zooming
+
+      this.enableZoom = true;
+      this.zoomSpeed = 1.0; // Set to false to disable rotating
+
+      this.enableRotate = true;
+      this.rotateSpeed = 1.0; // Set to false to disable panning
+
+      this.enablePan = true;
+      this.panSpeed = 1.0;
+      this.screenSpacePanning = true; // if false, pan orthogonal to world-space direction camera.up
+
+      this.keyPanSpeed = 7.0; // pixels moved per arrow key push
+      // Set to true to automatically rotate around the target
+      // If auto-rotate is enabled, you must call controls.update() in your animation loop
+
+      this.autoRotate = false;
+      this.autoRotateSpeed = 2.0; // 30 seconds per orbit when fps is 60
+      // The four arrow keys
+
+      this.keys = {
+        LEFT: 'ArrowLeft',
+        UP: 'ArrowUp',
+        RIGHT: 'ArrowRight',
+        BOTTOM: 'ArrowDown'
+      }; // Mouse buttons
+
+      this.mouseButtons = {
+        LEFT: THREE.MOUSE.ROTATE,
+        MIDDLE: THREE.MOUSE.DOLLY,
+        RIGHT: THREE.MOUSE.PAN
+      }; // Touch fingers
+
+      this.touches = {
+        ONE: THREE.TOUCH.ROTATE,
+        TWO: THREE.TOUCH.DOLLY_PAN
+      }; // for reset
+
+      this.target0 = this.target.clone();
+      this.position0 = this.object.position.clone();
+      this.zoom0 = this.object.zoom; // the target DOM element for key events
+
+      this._domElementKeyEvents = null; //
+      // public methods
+      //
+
+      this.getPolarAngle = function () {
+
+        return spherical.phi;
+
+      };
+
+      this.getAzimuthalAngle = function () {
+
+        return spherical.theta;
+
+      };
+
+      this.listenToKeyEvents = function ( domElement ) {
+
+        domElement.addEventListener( 'keydown', onKeyDown );
+        this._domElementKeyEvents = domElement;
+
+      };
+
+      this.saveState = function () {
+
+        scope.target0.copy( scope.target );
+        scope.position0.copy( scope.object.position );
+        scope.zoom0 = scope.object.zoom;
+
+      };
+
+      this.reset = function () {
+
+        scope.target.copy( scope.target0 );
+        scope.object.position.copy( scope.position0 );
+        scope.object.zoom = scope.zoom0;
+        scope.object.updateProjectionMatrix();
+        scope.dispatchEvent( _changeEvent );
+        scope.update();
+        state = STATE.NONE;
+
+      }; // this method is exposed, but perhaps it would be better if we can make it private...
+
+
+      this.update = function () {
+
+        const offset = new THREE.Vector3(); // so camera.up is the orbit axis
+
+        const quat = new THREE.Quaternion().setFromUnitVectors( object.up, new THREE.Vector3( 0, 1, 0 ) );
+        const quatInverse = quat.clone().invert();
+        const lastPosition = new THREE.Vector3();
+        const lastQuaternion = new THREE.Quaternion();
+        const twoPI = 2 * Math.PI;
+        return function update() {
+
+          const position = scope.object.position;
+          offset.copy( position ).sub( scope.target ); // rotate offset to "y-axis-is-up" space
+
+          offset.applyQuaternion( quat ); // angle from z-axis around y-axis
+
+          spherical.setFromVector3( offset );
+
+          if ( scope.autoRotate && state === STATE.NONE ) {
+
+            rotateLeft( getAutoRotationAngle() );
+
+          }
+
+          if ( scope.enableDamping ) {
+
+            spherical.theta += sphericalDelta.theta * scope.dampingFactor;
+            spherical.phi += sphericalDelta.phi * scope.dampingFactor;
+
+          } else {
+
+            spherical.theta += sphericalDelta.theta;
+            spherical.phi += sphericalDelta.phi;
+
+          } // restrict theta to be between desired limits
+
+
+          let min = scope.minAzimuthAngle;
+          let max = scope.maxAzimuthAngle;
+
+          if ( isFinite( min ) && isFinite( max ) ) {
+
+            if ( min < - Math.PI ) min += twoPI; else if ( min > Math.PI ) min -= twoPI;
+            if ( max < - Math.PI ) max += twoPI; else if ( max > Math.PI ) max -= twoPI;
+
+            if ( min <= max ) {
+
+              spherical.theta = Math.max( min, Math.min( max, spherical.theta ) );
+
+            } else {
+
+              spherical.theta = spherical.theta > ( min + max ) / 2 ? Math.max( min, spherical.theta ) : Math.min( max, spherical.theta );
+
+            }
+
+          } // restrict phi to be between desired limits
+
+
+          spherical.phi = Math.max( scope.minPolarAngle, Math.min( scope.maxPolarAngle, spherical.phi ) );
+          spherical.makeSafe();
+          spherical.radius *= scale; // restrict radius to be between desired limits
+
+          spherical.radius = Math.max( scope.minDistance, Math.min( scope.maxDistance, spherical.radius ) ); // move target to panned location
+
+          if ( scope.enableDamping === true ) {
+
+            scope.target.addScaledVector( panOffset, scope.dampingFactor );
+
+          } else {
+
+            scope.target.add( panOffset );
+
+          }
+
+          offset.setFromSpherical( spherical ); // rotate offset back to "camera-up-vector-is-up" space
+
+          offset.applyQuaternion( quatInverse );
+          position.copy( scope.target ).add( offset );
+          scope.object.lookAt( scope.target );
+
+          if ( scope.enableDamping === true ) {
+
+            sphericalDelta.theta *= 1 - scope.dampingFactor;
+            sphericalDelta.phi *= 1 - scope.dampingFactor;
+            panOffset.multiplyScalar( 1 - scope.dampingFactor );
+
+          } else {
+
+            sphericalDelta.set( 0, 0, 0 );
+            panOffset.set( 0, 0, 0 );
+
+          }
+
+          scale = 1; // update condition is:
+          // min(camera displacement, camera rotation in radians)^2 > EPS
+          // using small-angle approximation cos(x/2) = 1 - x^2 / 8
+
+          if ( zoomChanged || lastPosition.distanceToSquared( scope.object.position ) > EPS || 8 * ( 1 - lastQuaternion.dot( scope.object.quaternion ) ) > EPS ) {
+
+            scope.dispatchEvent( _changeEvent );
+            lastPosition.copy( scope.object.position );
+            lastQuaternion.copy( scope.object.quaternion );
+            zoomChanged = false;
+            return true;
+
+          }
+
+          return false;
+
+        };
+
+      }();
+
+      this.dispose = function () {
+
+        scope.domElement.removeEventListener( 'contextmenu', onContextMenu );
+        scope.domElement.removeEventListener( 'pointerdown', onPointerDown );
+        scope.domElement.removeEventListener( 'wheel', onMouseWheel );
+        scope.domElement.removeEventListener( 'touchstart', onTouchStart );
+        scope.domElement.removeEventListener( 'touchend', onTouchEnd );
+        scope.domElement.removeEventListener( 'touchmove', onTouchMove );
+        scope.domElement.ownerDocument.removeEventListener( 'pointermove', onPointerMove );
+        scope.domElement.ownerDocument.removeEventListener( 'pointerup', onPointerUp );
+
+        if ( scope._domElementKeyEvents !== null ) {
+
+          scope._domElementKeyEvents.removeEventListener( 'keydown', onKeyDown );
+
+        } //scope.dispatchEvent( { type: 'dispose' } ); // should this be added here?
+
+      }; //
+      // internals
+      //
+
+
+      const scope = this;
+      const STATE = {
+        NONE: - 1,
+        ROTATE: 0,
+        DOLLY: 1,
+        PAN: 2,
+        TOUCH_ROTATE: 3,
+        TOUCH_PAN: 4,
+        TOUCH_DOLLY_PAN: 5,
+        TOUCH_DOLLY_ROTATE: 6
+      };
+      let state = STATE.NONE;
+      const EPS = 0.000001; // current position in spherical coordinates
+
+      const spherical = new THREE.Spherical();
+      const sphericalDelta = new THREE.Spherical();
+      let scale = 1;
+      const panOffset = new THREE.Vector3();
+      let zoomChanged = false;
+      const rotateStart = new THREE.Vector2();
+      const rotateEnd = new THREE.Vector2();
+      const rotateDelta = new THREE.Vector2();
+      const panStart = new THREE.Vector2();
+      const panEnd = new THREE.Vector2();
+      const panDelta = new THREE.Vector2();
+      const dollyStart = new THREE.Vector2();
+      const dollyEnd = new THREE.Vector2();
+      const dollyDelta = new THREE.Vector2();
+
+      function getAutoRotationAngle() {
+
+        return 2 * Math.PI / 60 / 60 * scope.autoRotateSpeed;
+
+      }
+
+      function getZoomScale() {
+
+        return Math.pow( 0.95, scope.zoomSpeed );
+
+      }
+
+      function rotateLeft( angle ) {
+
+        sphericalDelta.theta -= angle;
+
+      }
+
+      function rotateUp( angle ) {
+
+        sphericalDelta.phi -= angle;
+
+      }
+
+      const panLeft = function () {
+
+        const v = new THREE.Vector3();
+        return function panLeft( distance, objectMatrix ) {
+
+          v.setFromMatrixColumn( objectMatrix, 0 ); // get X column of objectMatrix
+
+          v.multiplyScalar( - distance );
+          panOffset.add( v );
+
+        };
+
+      }();
+
+      const panUp = function () {
+
+        const v = new THREE.Vector3();
+        return function panUp( distance, objectMatrix ) {
+
+          if ( scope.screenSpacePanning === true ) {
+
+            v.setFromMatrixColumn( objectMatrix, 1 );
+
+          } else {
+
+            v.setFromMatrixColumn( objectMatrix, 0 );
+            v.crossVectors( scope.object.up, v );
+
+          }
+
+          v.multiplyScalar( distance );
+          panOffset.add( v );
+
+        };
+
+      }(); // deltaX and deltaY are in pixels; right and down are positive
+
+
+      const pan = function () {
+
+        const offset = new THREE.Vector3();
+        return function pan( deltaX, deltaY ) {
+
+          const element = scope.domElement;
+
+          if ( scope.object.isPerspectiveCamera ) {
+
+            // perspective
+            const position = scope.object.position;
+            offset.copy( position ).sub( scope.target );
+            let targetDistance = offset.length(); // half of the fov is center to top of screen
+
+            targetDistance *= Math.tan( scope.object.fov / 2 * Math.PI / 180.0 ); // we use only clientHeight here so aspect ratio does not distort speed
+
+            panLeft( 2 * deltaX * targetDistance / element.clientHeight, scope.object.matrix );
+            panUp( 2 * deltaY * targetDistance / element.clientHeight, scope.object.matrix );
+
+          } else if ( scope.object.isOrthographicCamera ) {
+
+            // orthographic
+            panLeft( deltaX * ( scope.object.right - scope.object.left ) / scope.object.zoom / element.clientWidth, scope.object.matrix );
+            panUp( deltaY * ( scope.object.top - scope.object.bottom ) / scope.object.zoom / element.clientHeight, scope.object.matrix );
+
+          } else {
+
+            // camera neither orthographic nor perspective
+            console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - pan disabled.' );
+            scope.enablePan = false;
+
+          }
+
+        };
+
+      }();
+
+      function dollyOut( dollyScale ) {
+
+        if ( scope.object.isPerspectiveCamera ) {
+
+          scale /= dollyScale;
+
+        } else if ( scope.object.isOrthographicCamera ) {
+
+          scope.object.zoom = Math.max( scope.minZoom, Math.min( scope.maxZoom, scope.object.zoom * dollyScale ) );
+          scope.object.updateProjectionMatrix();
+          zoomChanged = true;
+
+        } else {
+
+          console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.' );
+          scope.enableZoom = false;
+
+        }
+
+      }
+
+      function dollyIn( dollyScale ) {
+
+        if ( scope.object.isPerspectiveCamera ) {
+
+          scale *= dollyScale;
+
+        } else if ( scope.object.isOrthographicCamera ) {
+
+          scope.object.zoom = Math.max( scope.minZoom, Math.min( scope.maxZoom, scope.object.zoom / dollyScale ) );
+          scope.object.updateProjectionMatrix();
+          zoomChanged = true;
+
+        } else {
+
+          console.warn( 'WARNING: OrbitControls.js encountered an unknown camera type - dolly/zoom disabled.' );
+          scope.enableZoom = false;
+
+        }
+
+      } //
+      // event callbacks - update the object state
+      //
+
+
+      function handleMouseDownRotate( event ) {
+
+        rotateStart.set( event.clientX, event.clientY );
+
+      }
+
+      function handleMouseDownDolly( event ) {
+
+        dollyStart.set( event.clientX, event.clientY );
+
+      }
+
+      function handleMouseDownPan( event ) {
+
+        panStart.set( event.clientX, event.clientY );
+
+      }
+
+      function handleMouseMoveRotate( event ) {
+
+        rotateEnd.set( event.clientX, event.clientY );
+        rotateDelta.subVectors( rotateEnd, rotateStart ).multiplyScalar( scope.rotateSpeed );
+        const element = scope.domElement;
+        rotateLeft( 2 * Math.PI * rotateDelta.x / element.clientHeight ); // yes, height
+
+        rotateUp( 2 * Math.PI * rotateDelta.y / element.clientHeight );
+        rotateStart.copy( rotateEnd );
+        scope.update();
+
+      }
+
+      function handleMouseMoveDolly( event ) {
+
+        dollyEnd.set( event.clientX, event.clientY );
+        dollyDelta.subVectors( dollyEnd, dollyStart );
+
+        if ( dollyDelta.y > 0 ) {
+
+          dollyOut( getZoomScale() );
+
+        } else if ( dollyDelta.y < 0 ) {
+
+          dollyIn( getZoomScale() );
+
+        }
+
+        dollyStart.copy( dollyEnd );
+        scope.update();
+
+      }
+
+      function handleMouseMovePan( event ) {
+
+        panEnd.set( event.clientX, event.clientY );
+        panDelta.subVectors( panEnd, panStart ).multiplyScalar( scope.panSpeed );
+        pan( panDelta.x, panDelta.y );
+        panStart.copy( panEnd );
+        scope.update();
+
+      }
+
+      function handleMouseUp( ) { // no-op
+      }
+
+      function handleMouseWheel( event ) {
+
+        if ( event.deltaY < 0 ) {
+
+          dollyIn( getZoomScale() );
+
+        } else if ( event.deltaY > 0 ) {
+
+          dollyOut( getZoomScale() );
+
+        }
+
+        scope.update();
+
+      }
+
+      function handleKeyDown( event ) {
+
+        let needsUpdate = false;
+
+        switch ( event.code ) {
+
+          case scope.keys.UP:
+            pan( 0, scope.keyPanSpeed );
+            needsUpdate = true;
+            break;
+
+          case scope.keys.BOTTOM:
+            pan( 0, - scope.keyPanSpeed );
+            needsUpdate = true;
+            break;
+
+          case scope.keys.LEFT:
+            pan( scope.keyPanSpeed, 0 );
+            needsUpdate = true;
+            break;
+
+          case scope.keys.RIGHT:
+            pan( - scope.keyPanSpeed, 0 );
+            needsUpdate = true;
+            break;
+
+        }
+
+        if ( needsUpdate ) {
+
+          // prevent the browser from scrolling on cursor keys
+          event.preventDefault();
+          scope.update();
+
+        }
+
+      }
+
+      function handleTouchStartRotate( event ) {
+
+        if ( event.touches.length == 1 ) {
+
+          rotateStart.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
+
+        } else {
+
+          const x = 0.5 * ( event.touches[ 0 ].pageX + event.touches[ 1 ].pageX );
+          const y = 0.5 * ( event.touches[ 0 ].pageY + event.touches[ 1 ].pageY );
+          rotateStart.set( x, y );
+
+        }
+
+      }
+
+      function handleTouchStartPan( event ) {
+
+        if ( event.touches.length == 1 ) {
+
+          panStart.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
+
+        } else {
+
+          const x = 0.5 * ( event.touches[ 0 ].pageX + event.touches[ 1 ].pageX );
+          const y = 0.5 * ( event.touches[ 0 ].pageY + event.touches[ 1 ].pageY );
+          panStart.set( x, y );
+
+        }
+
+      }
+
+      function handleTouchStartDolly( event ) {
+
+        const dx = event.touches[ 0 ].pageX - event.touches[ 1 ].pageX;
+        const dy = event.touches[ 0 ].pageY - event.touches[ 1 ].pageY;
+        const distance = Math.sqrt( dx * dx + dy * dy );
+        dollyStart.set( 0, distance );
+
+      }
+
+      function handleTouchStartDollyPan( event ) {
+
+        if ( scope.enableZoom ) handleTouchStartDolly( event );
+        if ( scope.enablePan ) handleTouchStartPan( event );
+
+      }
+
+      function handleTouchStartDollyRotate( event ) {
+
+        if ( scope.enableZoom ) handleTouchStartDolly( event );
+        if ( scope.enableRotate ) handleTouchStartRotate( event );
+
+      }
+
+      function handleTouchMoveRotate( event ) {
+
+        if ( event.touches.length == 1 ) {
+
+          rotateEnd.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
+
+        } else {
+
+          const x = 0.5 * ( event.touches[ 0 ].pageX + event.touches[ 1 ].pageX );
+          const y = 0.5 * ( event.touches[ 0 ].pageY + event.touches[ 1 ].pageY );
+          rotateEnd.set( x, y );
+
+        }
+
+        rotateDelta.subVectors( rotateEnd, rotateStart ).multiplyScalar( scope.rotateSpeed );
+        const element = scope.domElement;
+        rotateLeft( 2 * Math.PI * rotateDelta.x / element.clientHeight ); // yes, height
+
+        rotateUp( 2 * Math.PI * rotateDelta.y / element.clientHeight );
+        rotateStart.copy( rotateEnd );
+
+      }
+
+      function handleTouchMovePan( event ) {
+
+        if ( event.touches.length == 1 ) {
+
+          panEnd.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
+
+        } else {
+
+          const x = 0.5 * ( event.touches[ 0 ].pageX + event.touches[ 1 ].pageX );
+          const y = 0.5 * ( event.touches[ 0 ].pageY + event.touches[ 1 ].pageY );
+          panEnd.set( x, y );
+
+        }
+
+        panDelta.subVectors( panEnd, panStart ).multiplyScalar( scope.panSpeed );
+        pan( panDelta.x, panDelta.y );
+        panStart.copy( panEnd );
+
+      }
+
+      function handleTouchMoveDolly( event ) {
+
+        const dx = event.touches[ 0 ].pageX - event.touches[ 1 ].pageX;
+        const dy = event.touches[ 0 ].pageY - event.touches[ 1 ].pageY;
+        const distance = Math.sqrt( dx * dx + dy * dy );
+        dollyEnd.set( 0, distance );
+        dollyDelta.set( 0, Math.pow( dollyEnd.y / dollyStart.y, scope.zoomSpeed ) );
+        dollyOut( dollyDelta.y );
+        dollyStart.copy( dollyEnd );
+
+      }
+
+      function handleTouchMoveDollyPan( event ) {
+
+        if ( scope.enableZoom ) handleTouchMoveDolly( event );
+        if ( scope.enablePan ) handleTouchMovePan( event );
+
+      }
+
+      function handleTouchMoveDollyRotate( event ) {
+
+        if ( scope.enableZoom ) handleTouchMoveDolly( event );
+        if ( scope.enableRotate ) handleTouchMoveRotate( event );
+
+      }
+
+      function handleTouchEnd( ) { // no-op
+      } //
+      // event handlers - FSM: listen for events and reset state
+      //
+
+
+      function onPointerDown( event ) {
+
+        if ( scope.enabled === false ) return;
+
+        switch ( event.pointerType ) {
+
+          case 'mouse':
+          case 'pen':
+            onMouseDown( event );
+            break;
+        // TODO touch
+
+        }
+
+      }
+
+      function onPointerMove( event ) {
+
+        if ( scope.enabled === false ) return;
+
+        switch ( event.pointerType ) {
+
+          case 'mouse':
+          case 'pen':
+            onMouseMove( event );
+            break;
+        // TODO touch
+
+        }
+
+      }
+
+      function onPointerUp( event ) {
+
+        switch ( event.pointerType ) {
+
+          case 'mouse':
+          case 'pen':
+            onMouseUp( event );
+            break;
+        // TODO touch
+
+        }
+
+      }
+
+      function onMouseDown( event ) {
+
+        // Prevent the browser from scrolling.
+        event.preventDefault(); // Manually set the focus since calling preventDefault above
+        // prevents the browser from setting it automatically.
+
+        scope.domElement.focus ? scope.domElement.focus() : window.focus();
+        let mouseAction;
+
+        switch ( event.button ) {
+
+          case 0:
+            mouseAction = scope.mouseButtons.LEFT;
+            break;
+
+          case 1:
+            mouseAction = scope.mouseButtons.MIDDLE;
+            break;
+
+          case 2:
+            mouseAction = scope.mouseButtons.RIGHT;
+            break;
+
+          default:
+            mouseAction = - 1;
+
+        }
+
+        switch ( mouseAction ) {
+
+          case THREE.MOUSE.DOLLY:
+            if ( scope.enableZoom === false ) return;
+            handleMouseDownDolly( event );
+            state = STATE.DOLLY;
+            break;
+
+          case THREE.MOUSE.ROTATE:
+            if ( event.ctrlKey || event.metaKey || event.shiftKey ) {
+
+              if ( scope.enablePan === false ) return;
+              handleMouseDownPan( event );
+              state = STATE.PAN;
+
+            } else {
+
+              if ( scope.enableRotate === false ) return;
+              handleMouseDownRotate( event );
+              state = STATE.ROTATE;
+
+            }
+
+            break;
+
+          case THREE.MOUSE.PAN:
+            if ( event.ctrlKey || event.metaKey || event.shiftKey ) {
+
+              if ( scope.enableRotate === false ) return;
+              handleMouseDownRotate( event );
+              state = STATE.ROTATE;
+
+            } else {
+
+              if ( scope.enablePan === false ) return;
+              handleMouseDownPan( event );
+              state = STATE.PAN;
+
+            }
+
+            break;
+
+          default:
+            state = STATE.NONE;
+
+        }
+
+        if ( state !== STATE.NONE ) {
+
+          scope.domElement.ownerDocument.addEventListener( 'pointermove', onPointerMove );
+          scope.domElement.ownerDocument.addEventListener( 'pointerup', onPointerUp );
+          scope.dispatchEvent( _startEvent );
+
+        }
+
+      }
+
+      function onMouseMove( event ) {
+
+        if ( scope.enabled === false ) return;
+        event.preventDefault();
+
+        switch ( state ) {
+
+          case STATE.ROTATE:
+            if ( scope.enableRotate === false ) return;
+            handleMouseMoveRotate( event );
+            break;
+
+          case STATE.DOLLY:
+            if ( scope.enableZoom === false ) return;
+            handleMouseMoveDolly( event );
+            break;
+
+          case STATE.PAN:
+            if ( scope.enablePan === false ) return;
+            handleMouseMovePan( event );
+            break;
+
+        }
+
+      }
+
+      function onMouseUp( event ) {
+
+        scope.domElement.ownerDocument.removeEventListener( 'pointermove', onPointerMove );
+        scope.domElement.ownerDocument.removeEventListener( 'pointerup', onPointerUp );
+        if ( scope.enabled === false ) return;
+        handleMouseUp( event );
+        scope.dispatchEvent( _endEvent );
+        state = STATE.NONE;
+
+      }
+
+      function onMouseWheel( event ) {
+
+        if ( scope.enabled === false || scope.enableZoom === false || state !== STATE.NONE && state !== STATE.ROTATE ) return;
+        event.preventDefault();
+        scope.dispatchEvent( _startEvent );
+        handleMouseWheel( event );
+        scope.dispatchEvent( _endEvent );
+
+      }
+
+      function onKeyDown( event ) {
+
+        if ( scope.enabled === false || scope.enablePan === false ) return;
+        handleKeyDown( event );
+
+      }
+
+      function onTouchStart( event ) {
+
+        if ( scope.enabled === false ) return;
+        event.preventDefault(); // prevent scrolling
+
+        switch ( event.touches.length ) {
+
+          case 1:
+            switch ( scope.touches.ONE ) {
+
+              case THREE.TOUCH.ROTATE:
+                if ( scope.enableRotate === false ) return;
+                handleTouchStartRotate( event );
+                state = STATE.TOUCH_ROTATE;
+                break;
+
+              case THREE.TOUCH.PAN:
+                if ( scope.enablePan === false ) return;
+                handleTouchStartPan( event );
+                state = STATE.TOUCH_PAN;
+                break;
+
+              default:
+                state = STATE.NONE;
+
+            }
+
+            break;
+
+          case 2:
+            switch ( scope.touches.TWO ) {
+
+              case THREE.TOUCH.DOLLY_PAN:
+                if ( scope.enableZoom === false && scope.enablePan === false ) return;
+                handleTouchStartDollyPan( event );
+                state = STATE.TOUCH_DOLLY_PAN;
+                break;
+
+              case THREE.TOUCH.DOLLY_ROTATE:
+                if ( scope.enableZoom === false && scope.enableRotate === false ) return;
+                handleTouchStartDollyRotate( event );
+                state = STATE.TOUCH_DOLLY_ROTATE;
+                break;
+
+              default:
+                state = STATE.NONE;
+
+            }
+
+            break;
+
+          default:
+            state = STATE.NONE;
+
+        }
+
+        if ( state !== STATE.NONE ) {
+
+          scope.dispatchEvent( _startEvent );
+
+        }
+
+      }
+
+      function onTouchMove( event ) {
+
+        if ( scope.enabled === false ) return;
+        event.preventDefault(); // prevent scrolling
+
+        switch ( state ) {
+
+          case STATE.TOUCH_ROTATE:
+            if ( scope.enableRotate === false ) return;
+            handleTouchMoveRotate( event );
+            scope.update();
+            break;
+
+          case STATE.TOUCH_PAN:
+            if ( scope.enablePan === false ) return;
+            handleTouchMovePan( event );
+            scope.update();
+            break;
+
+          case STATE.TOUCH_DOLLY_PAN:
+            if ( scope.enableZoom === false && scope.enablePan === false ) return;
+            handleTouchMoveDollyPan( event );
+            scope.update();
+            break;
+
+          case STATE.TOUCH_DOLLY_ROTATE:
+            if ( scope.enableZoom === false && scope.enableRotate === false ) return;
+            handleTouchMoveDollyRotate( event );
+            scope.update();
+            break;
+
+          default:
+            state = STATE.NONE;
+
+        }
+
+      }
+
+      function onTouchEnd( event ) {
+
+        if ( scope.enabled === false ) return;
+        handleTouchEnd( event );
+        scope.dispatchEvent( _endEvent );
+        state = STATE.NONE;
+
+      }
+
+      function onContextMenu( event ) {
+
+        if ( scope.enabled === false ) return;
+        event.preventDefault();
+
+      } //
+
+
+      scope.domElement.addEventListener( 'contextmenu', onContextMenu );
+      scope.domElement.addEventListener( 'pointerdown', onPointerDown );
+      scope.domElement.addEventListener( 'wheel', onMouseWheel, {
+        passive: false
+      } );
+      scope.domElement.addEventListener( 'touchstart', onTouchStart, {
+        passive: false
+      } );
+      scope.domElement.addEventListener( 'touchend', onTouchEnd );
+      scope.domElement.addEventListener( 'touchmove', onTouchMove, {
+        passive: false
+      } ); // force an update at start
+
+      this.update();
+
+    }
+
+  } // This set of controls performs orbiting, dollying (zooming), and panning.
+  // Unlike TrackballControls, it maintains the "up" direction object.up (+Y by default).
+  // This is very similar to OrbitControls, another set of touch behavior
+  //
+  //    Orbit - right mouse, or left mouse + ctrl/meta/shiftKey / touch: two-finger rotate
+  //    Zoom - middle mouse, or mousewheel / touch: two-finger spread or squish
+  //    Pan - left mouse, or arrow keys / touch: one-finger move
+
+
+  class MapControls extends OrbitControls {
+
+    constructor( object, domElement ) {
+
+      super( object, domElement );
+      this.screenSpacePanning = false; // pan orthogonal to world-space direction camera.up
+
+      this.mouseButtons.LEFT = THREE.MOUSE.PAN;
+      this.mouseButtons.RIGHT = THREE.MOUSE.ROTATE;
+      this.touches.ONE = THREE.TOUCH.PAN;
+      this.touches.TWO = THREE.TOUCH.DOLLY_ROTATE;
+
+    }
+
+  }
+
+  THREE.MapControls = MapControls;
+  THREE.OrbitControls = OrbitControls;
+
+} )();
+
+</script>
+
+<!-- ===== SECTION 32: MAIN APPLICATION SCRIPT ===== -->
+<script>
+  "use strict";
+  // =====================================================
+  // SECTION 32a.5: 3DCSSL ENCRYPTION SUPPORT
+  // =====================================================
+  const ENCRYPTION_PASSWORD = "1605198804021991";
+  
+  async function decryptAES(encryptedData, password) {
+      try {
+          if (encryptedData.length < 24) {
+              console.error('Encrypted data too short:', encryptedData.length);
+              return null;
+          }
+          
+          const salt = encryptedData.slice(0, 8);
+          const iv = encryptedData.slice(8, 24);
+          const ciphertext = encryptedData.slice(24);
+          
+          console.log(`Decrypting: salt=${salt.length} bytes, iv=${iv.length} bytes, ciphertext=${ciphertext.length} bytes`);
+          
+          const enc = new TextEncoder();
+          const keyMaterial = await crypto.subtle.importKey(
+              'raw',
+              enc.encode(password),
+              'PBKDF2',
+              false,
+              ['deriveKey']
+          );
+          
+          const key = await crypto.subtle.deriveKey(
+              {
+                  name: 'PBKDF2',
+                  salt: salt,
+                  iterations: 10000,
+                  hash: 'SHA-256'
+              },
+              keyMaterial,
+              {
+                  name: 'AES-CBC',
+                  length: 256
+              },
+              false,
+              ['decrypt']
+          );
+          
+          const decrypted = await crypto.subtle.decrypt(
+              {
+                  name: 'AES-CBC',
+                  iv: iv
+              },
+              key,
+              ciphertext
+          );
+          
+          const result = new TextDecoder('utf-8').decode(decrypted);
+          console.log(`Decryption successful: ${result.length} bytes`);
+          return result;
+      } catch (e) {
+          console.error('Decryption failed:', e);
+          // Try to read as plain text
+          try {
+              const text = new TextDecoder('utf-8').decode(encryptedData);
+              if (text.includes('I obi')) {
+                  console.log('File is plain text, using as-is');
+                  return text;
+              }
+          } catch (e2) {}
+          return null;
+      }
+  }
+
+
+  // =====================================================
+  // SECTION 32a: PERSISTENCE HELPERS
+  // =====================================================
+  function saveSettings(key, data) {
+    try { localStorage.setItem('shipview_' + key, JSON.stringify(data)); } catch(e) {}
+  }
+  function loadSettings(key, def) {
+    try {
+      const raw = localStorage.getItem('shipview_' + key);
+      return raw ? JSON.parse(raw) : def;
+    } catch(e) { return def; }
+  }
+
+  // =====================================================
+  // SECTION 32b: THEMES (FIXED)
+  // =====================================================
+  const THEMES = {
+    ocean: { name: 'Ocean Blue', css: 'theme-ocean' },
+    dark: { name: 'Dark Mode', css: 'theme-dark' },
+    forest: { name: 'Forest Green', css: 'theme-forest' },
+    sunset: { name: 'Sunset', css: 'theme-sunset' },
+    purple: { name: 'Purple Haze', css: 'theme-purple' },
+    midnight: { name: 'Midnight', css: 'theme-midnight' },
+    warmgray: { name: 'Warm Gray', css: 'theme-warmgray' },
+    teal: { name: 'Teal', css: 'theme-teal' },
+    coral: { name: 'Coral', css: 'theme-coral' },
+    light: { name: 'Light', css: 'theme-light' }
+  };
+
+  let currentTheme = loadSettings('theme', 'ocean');
+
+  function applyTheme(themeName) {
+    const theme = THEMES[themeName];
+    if (!theme) return;
+    document.body.className = document.body.className.split(' ')
+      .filter(c => !c.startsWith('theme-')).join(' ');
+    document.body.classList.add(theme.css);
+    currentTheme = themeName;
+    saveSettings('theme', themeName);
+    document.querySelectorAll('.theme-option').forEach(el => {
+      el.style.border = el.dataset.theme === themeName ? '2px solid var(--accent)' : '2px solid var(--panel-border)';
+    });
+    // Force repaint
+    document.body.style.transform = 'scale(0.999)';
+    setTimeout(() => document.body.style.transform = '', 10);
+  }
+
+  // =====================================================
+  // SECTION 32c: CORE VIEWER
+  // =====================================================
+  const Viewer = {
+    scene: new THREE.Scene(),
+    perspCamera: new THREE.PerspectiveCamera(35, window.innerWidth/window.innerHeight, 0.1, 200000),
+    orthoCamera: new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 0.1, 200000),
+    camera: null,
+    isOrtho: false,
+    renderer: null,
+    controls: null,
+    sun: null,
+    sunTarget: null,
+    ambient: null,
+    hemiLight: null,
+    axes: null,
+    clippingPlanes: null,
+    emblemGroup: null,
+    emblemLoaded: false,
+    screenSize: 24,
+    thickLineWeight: 2.0,
+    
+    init() {
+      this.camera = this.perspCamera;
+      this.camera.up.set(0, 0, 1);
+      this.orthoCamera.up.set(0, 0, 1);
+      
+      this.renderer = new THREE.WebGLRenderer({ 
+          antialias: true, alpha: true, logarithmicDepthBuffer: true, 
+          preserveDrawingBuffer: true, powerPreference: "high-performance" 
+      });
+      
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+      this.renderer.setPixelRatio(window.devicePixelRatio);
+      this.renderer.outputEncoding = THREE.sRGBEncoding;
+      this.renderer.physicallyCorrectLights = true;
+      
+      this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      this.renderer.toneMappingExposure = 1.1;
+
+      this.renderer.shadowMap.enabled = false;
+      this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      this.renderer.localClippingEnabled = false; // FIX: Start with clipping disabled
+      this.renderer.domElement.style.touchAction = 'none';
+      document.getElementById('canvas-container').appendChild(this.renderer.domElement);
+      
+      this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+      this.controls.enableDamping = false; 
+      this.controls.enableZoom = true;
+      this.controls.enableRotate = true;
+      this.controls.enablePan = true;
+      this.controls.screenSpacePanning = true;
+      this.controls.minDistance = 0.1;
+      this.controls.maxDistance = 100000;
+      this.controls.zoomSpeed = 1.0;
+      this.controls.rotateSpeed = 1.0;
+      this.controls.touchRotate = true;
+      this.controls.touchZoom = true;
+      this.controls.touchPan = true;
+      this.controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+
+      this.sun = new THREE.DirectionalLight(0xffffff, 1.0);
+      this.sunTarget = new THREE.Object3D();
+      this.sun.target = this.sunTarget;
+      this.sunTarget.position.set(0, 0, 0);
+
+      this.sun.castShadow = true;
+      this.sun.shadow.mapSize.width = 4096;
+      this.sun.shadow.mapSize.height = 4096;
+      this.sun.shadow.bias = -0.0005;
+
+      this.scene.add(this.sun);
+      this.scene.add(this.sunTarget);
+
+      this.ambient = new THREE.AmbientLight(0xffffff, 0.6);
+      this.hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
+
+      this.scene.add(this.ambient);
+      this.scene.add(this.hemiLight);
+      
+      // Emblem: persistent rotating emblem at workspace center
+      this.emblemGroup = new THREE.Group();
+      this.emblemGroup.name = 'emblemGroup';
+      this.scene.add(this.emblemGroup);
+      
+      // try to load a local emblem file at projects/csl.3dd (relative to server root)
+      fetch('projects/csl.3dd').then(resp => {
+          if (!resp.ok) throw new Error('No emblem file');
+          return resp.text();
+      }).then(text => {
+          try {
+              const parts = Parser.collectParts(text, 'csl.3dd');
+              if (!parts || parts.length === 0) return;
+              // compute center of emblem
+              let minX = Infinity, minY = Infinity, minZ = Infinity, maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+              parts.forEach(part => {
+                  for (let j = 0; j < part.positions.length; j += 3) {
+                      const x = part.positions[j], y = part.positions[j+1], z = part.positions[j+2];
+                      if (x < minX) minX = x; if (x > maxX) maxX = x;
+                      if (y < minY) minY = y; if (y > maxY) maxY = y;
+                      if (z < minZ) minZ = z; if (z > maxZ) maxZ = z;
+                  }
+              });
+              const centerX = (minX + maxX) / 2;
+              const centerY = (minY + maxY) / 2;
+              const centerZ = (minZ + maxZ) / 2;
+              parts.forEach(part => {
+                  const shifted = new Float32Array(part.positions.length);
+                  for (let j = 0; j < part.positions.length; j += 3) {
+                      shifted[j]   = part.positions[j] - centerX;
+                      shifted[j+1] = part.positions[j+1] - centerY;
+                      shifted[j+2] = part.positions[j+2] - centerZ;
+                  }
+                  const geo = new THREE.BufferGeometry();
+                  geo.setAttribute('position', new THREE.BufferAttribute(shifted, 3));
+                  if (part.indices) geo.setIndex(part.indices);
+                  geo.computeVertexNormals();
+                  // color from meta if present
+                  const meta = part.meta || {};
+                  const rawColor = meta['NCH_COLOR'] || '';
+                  let color = new THREE.Color(0x909090);
+                  if (rawColor) {
+                      const rgb = rawColor.split(' ').map(Number);
+                      if (rgb.length >= 3) color = new THREE.Color(rgb[0]/255, rgb[1]/255, rgb[2]/255);
+                  }
+                  const mat = new THREE.MeshStandardMaterial({ color, side: THREE.DoubleSide, roughness: 0.6, metalness: 0.2 });
+                  const mesh = new THREE.Mesh(geo, mat);
+                  this.emblemGroup.add(mesh);
+              });
+              // scale down to be unobtrusive
+              this.emblemGroup.scale.setScalar(0.01);
+              this.emblemGroup.position.set(0,0,0);
+              this.emblemLoaded = true;
+              console.log('Emblem loaded into scene');
+          } catch (e) { console.warn('Failed to parse emblem:', e); }
+      }).catch(() => { /* silent if not present */ });
+      
+      this.clippingPlanes = {
+          xPos: new THREE.Plane(new THREE.Vector3(-1, 0, 0), Infinity),
+          xNeg: new THREE.Plane(new THREE.Vector3(1, 0, 0), Infinity),
+          yPos: new THREE.Plane(new THREE.Vector3(0, -1, 0), Infinity),
+          yNeg: new THREE.Plane(new THREE.Vector3(0, 1, 0), Infinity),
+          zPos: new THREE.Plane(new THREE.Vector3(0, 0, -1), Infinity),
+          zNeg: new THREE.Plane(new THREE.Vector3(0, 0, 1), Infinity),
+          custom: new THREE.Plane(new THREE.Vector3(0, 0, 1), Infinity)
+      };
+      
+      applyTheme(currentTheme);
+      this.renderThemeSelector();
+      
+      const savedScreen = loadSettings('screenSize', 24);
+      const savedThick = loadSettings('thickLine', 2.0);
+      this.screenSize = savedScreen;
+      this.thickLineWeight = savedThick;
+      document.getElementById('screen-size-slider').value = savedScreen;
+      document.getElementById('screen-size-val').innerText = savedScreen + '"';
+      document.getElementById('thick-line-slider').value = savedThick;
+      document.getElementById('thick-line-input').value = savedThick;
+      document.getElementById('thick-line-val').innerText = savedThick.toFixed(1);
+      
+      this.applyThickLine(savedThick);
+    },
+
+    renderThemeSelector() {
+      const container = document.getElementById('theme-list');
+      let html = '';
+      for (let key in THEMES) {
+        const t = THEMES[key];
+        html += `
+          <div class="theme-option" data-theme="${key}" onclick="applyTheme('${key}')" style="border:2px solid ${key === currentTheme ? 'var(--accent)' : 'var(--panel-border)'};">
+            <span class="swatch" style="background:${t.css.includes('ocean') ? '#1a2a3a' : t.css.includes('dark') ? '#1a1a1a' : t.css.includes('forest') ? '#1a2a1a' : t.css.includes('sunset') ? '#3a201a' : t.css.includes('purple') ? '#2a1a3a' : t.css.includes('midnight') ? '#0a0a1a' : t.css.includes('warmgray') ? '#2a2520' : t.css.includes('teal') ? '#0a2a2a' : t.css.includes('coral') ? '#3a1a1a' : t.css.includes('light') ? '#e8e8e8' : '#1a2a3a'}"></span>
+            <span style="font-size:12px;color:var(--panel-text);">${t.name}</span>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+    },
+
+    updateAxes(size, globalOffset) {
+      if(this.axes) this.scene.remove(this.axes);
+      const baseSize = 1;
+      const axisGroup = new THREE.Group();
+      axisGroup.userData.baseSize = baseSize;
+
+      const axes = [
+        { dir: new THREE.Vector3(1, 0, 0), color: new THREE.Color(1, 0, 0) },
+        { dir: new THREE.Vector3(0, 1, 0), color: new THREE.Color(0, 1, 0) },
+        { dir: new THREE.Vector3(0, 0, 1), color: new THREE.Color(0, 0, 1) }
+      ];
+
+      axes.forEach(axis => {
+        const lineGeo = new THREE.BufferGeometry();
+        const positions = new Float32Array([0, 0, 0, axis.dir.x * baseSize, axis.dir.y * baseSize, axis.dir.z * baseSize]);
+        const colors = new Float32Array([axis.color.r, axis.color.g, axis.color.b, axis.color.r, axis.color.g, axis.color.b]);
+        lineGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        lineGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        const lineMat = new THREE.LineBasicMaterial({ vertexColors: true, depthTest: false, transparent: true, opacity: 0.9 });
+        const line = new THREE.Line(lineGeo, lineMat);
+        axisGroup.add(line);
+
+        const coneGeo = new THREE.ConeGeometry(0.05, 0.18, 12);
+        const coneMat = new THREE.MeshBasicMaterial({ color: axis.color, depthTest: false, transparent: true, opacity: 0.9 });
+        const cone = new THREE.Mesh(coneGeo, coneMat);
+        cone.position.copy(axis.dir).multiplyScalar(baseSize - 0.1);
+        cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), axis.dir.clone().normalize());
+        axisGroup.add(cone);
+      });
+
+      this.axes = axisGroup;
+      if (globalOffset) {
+          this.axes.position.set(-globalOffset.x, -globalOffset.y, -globalOffset.z);
+      }
+      this.axes.traverse(child => {
+          if (child.material) {
+              child.material.depthTest = false;
+              child.material.transparent = true;
+          }
+      });
+      this.axes.frustumCulled = false;
+      this.axes.renderOrder = 1000;
+      if(ViewEngine.axesVisible) this.scene.add(this.axes);
+      this.updateAxesScreenSize();
+    },
+
+    updateAxesScreenSize() {
+      if (!this.axes || !this.camera) return;
+      const desiredPixelSize = 25;
+      let worldSize = 1;
+      if (this.camera.isPerspectiveCamera) {
+          const distance = Math.max(this.camera.position.distanceTo(this.axes.position), 0.001);
+          const vFOV = THREE.MathUtils.degToRad(this.camera.fov);
+          const frustumHeight = 2 * Math.tan(vFOV / 2) * distance;
+          worldSize = frustumHeight * (desiredPixelSize / window.innerHeight);
+      } else if (this.camera.isOrthographicCamera) {
+          const frustumHeight = this.camera.top - this.camera.bottom;
+          worldSize = frustumHeight * (desiredPixelSize / window.innerHeight);
+      }
+      const scale = Math.max(worldSize / (this.axes.userData.baseSize || 1), 0.001);
+      this.axes.scale.setScalar(scale);
+    },
+
+    updateSun(azimuthDeg, elevationDeg, intensity) {
+      const az = azimuthDeg * Math.PI / 180;
+      const el = elevationDeg * Math.PI / 180;
+      const radius = Parser.modelMaxDim * 2.5 || 1000;
+      this.sun.position.set(
+        radius * Math.cos(el) * Math.sin(az),
+        radius * Math.cos(el) * Math.cos(az),
+        radius * Math.sin(el)
+      );
+      this.sun.intensity = intensity / 100;
+    },
+    
+    applyDisplayProfile(screenSize) {
+      this.screenSize = parseFloat(screenSize);
+      document.getElementById('screen-size-val').innerText = this.screenSize + '"';
+      saveSettings('screenSize', this.screenSize);
+      
+      let maxPixelRatio = 2;
+      if (this.screenSize <= 15) maxPixelRatio = 1.5;
+      else if (this.screenSize <= 24) maxPixelRatio = 2.5;
+      else maxPixelRatio = 3.0;
+      
+      const currentRatio = this.renderer.getPixelRatio();
+      const targetRatio = Math.min(window.devicePixelRatio, maxPixelRatio);
+      if (currentRatio !== targetRatio) {
+        this.renderer.setPixelRatio(targetRatio);
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('statusTool').innerText = `Res: ${targetRatio.toFixed(1)}x`;
+      }
+    },
+    
+    applyThickLine(value) {
+      this.thickLineWeight = parseFloat(value);
+      document.getElementById('thick-line-val').innerText = this.thickLineWeight.toFixed(1);
+      document.getElementById('thick-line-slider').value = this.thickLineWeight;
+      document.getElementById('thick-line-input').value = this.thickLineWeight;
+      saveSettings('thickLine', this.thickLineWeight);
+      
+      // For LineSegments, linewidth is not supported in WebGL, but we keep it for reference.
+      Parser.modelGroup.children.forEach(mesh => {
+        mesh.children.forEach(child => {
+          if (child.name === 'edges' && child.isLineSegments) {
+            child.material.linewidth = this.thickLineWeight;
+            child.material.needsUpdate = true;
+          }
+        });
+      });
+    }
+  };
+
+  // =====================================================
+  // SECTION 32d: CAMERA & NAV
+  // =====================================================
+  const Camera = {
+    setProjection(type) {
+      document.getElementById('cam-perspective').classList.remove('selected');
+      document.getElementById('cam-orthographic').classList.remove('selected');
+      document.getElementById('cam-' + type).classList.add('selected');
+      
+      const isOrtho = (type === 'orthographic');
+      if(Viewer.isOrtho === isOrtho) return;
+      
+      const oldCam = Viewer.camera;
+      const newCam = isOrtho ? Viewer.orthoCamera : Viewer.perspCamera;
+      
+      newCam.position.copy(oldCam.position);
+      newCam.rotation.copy(oldCam.rotation);
+      
+      if(isOrtho) {
+        const dist = oldCam.position.distanceTo(Viewer.controls.target);
+        const halfHeight = Math.tan( (Viewer.perspCamera.fov * Math.PI / 180) / 2 ) * dist;
+        Viewer.orthoCamera.left = -halfHeight * Viewer.perspCamera.aspect;
+        Viewer.orthoCamera.right = halfHeight * Viewer.perspCamera.aspect;
+        Viewer.orthoCamera.top = halfHeight;
+        Viewer.orthoCamera.bottom = -halfHeight;
+        Viewer.orthoCamera.updateProjectionMatrix();
+      }
+      
+      Viewer.camera = newCam;
+      Viewer.isOrtho = isOrtho;
+      Viewer.controls.object = Viewer.camera;
+      Viewer.controls.update();
+    },
+
+    fly(pos, target) { 
+        Viewer.camera.position.copy(pos); 
+        Viewer.controls.target.copy(target); 
+        
+        if (Viewer.isOrtho) {
+            const halfHeight = (Parser.modelMaxDim * 0.6);
+            Viewer.orthoCamera.left = -halfHeight * (window.innerWidth / window.innerHeight);
+            Viewer.orthoCamera.right = halfHeight * (window.innerWidth / window.innerHeight);
+            Viewer.orthoCamera.top = halfHeight;
+            Viewer.orthoCamera.bottom = -halfHeight;
+            Viewer.orthoCamera.updateProjectionMatrix();
+        }
+
+        Viewer.controls.update(); 
+        UI.closePanels(); 
+    },
+
+    getFrameDirection() {
+        const dir = new THREE.Vector3().subVectors(Viewer.camera.position, Viewer.controls.target);
+        if (dir.lengthSq() < 1e-6) return new THREE.Vector3(0.8, -1, 1).normalize();
+        return dir.normalize();
+    },
+    
+    zoomExtents() { 
+        if(!Parser.modelBox) return;
+        const box = Parser.modelBox;
+        const c = box.getCenter(new THREE.Vector3());
+        const sphere = box.getBoundingSphere(new THREE.Sphere());
+        const radius = sphere.radius;
+        if (radius <= 0) return;
+        let dist = radius / Math.sin(Viewer.perspCamera.fov * Math.PI / 360);
+        if(Viewer.perspCamera.aspect < 1) dist /= Viewer.perspCamera.aspect;
+        dist *= 1.15; 
+        const dir = this.getFrameDirection(); 
+        this.fly(c.clone().add(dir.multiplyScalar(dist)), c); 
+    },
+
+    isometric() { 
+        if(!Parser.modelBox) return;
+        const box = Parser.modelBox;
+        const c = box.getCenter(new THREE.Vector3());
+        const sphere = box.getBoundingSphere(new THREE.Sphere());
+        const radius = sphere.radius;
+        if (radius <= 0) return;
+        let dist = radius / Math.sin(Viewer.perspCamera.fov * Math.PI / 360);
+        if(Viewer.perspCamera.aspect < 1) dist /= Viewer.perspCamera.aspect;
+        dist *= 1.15;
+        const dir = new THREE.Vector3(0.8, -1, 1).normalize();
+        this.fly(c.clone().add(dir.multiplyScalar(dist)), c);
+    },
+
+    top() { const c = Parser.modelBox.getCenter(new THREE.Vector3()); this.fly(new THREE.Vector3(c.x, c.y - 0.01, c.z + Parser.modelMaxDim*1.5), c); },
+    bottom() { const c = Parser.modelBox.getCenter(new THREE.Vector3()); this.fly(new THREE.Vector3(c.x, c.y - 0.01, c.z - Parser.modelMaxDim*1.5), c); },
+    front() { const c = Parser.modelBox.getCenter(new THREE.Vector3()); this.fly(new THREE.Vector3(c.x + Parser.modelMaxDim*1.5, c.y, c.z), c); },
+    back() { const c = Parser.modelBox.getCenter(new THREE.Vector3()); this.fly(new THREE.Vector3(c.x - Parser.modelMaxDim*1.5, c.y, c.z), c); },
+    right() { const c = Parser.modelBox.getCenter(new THREE.Vector3()); this.fly(new THREE.Vector3(c.x, c.y + Parser.modelMaxDim*1.5, c.z), c); },
+    left() { const c = Parser.modelBox.getCenter(new THREE.Vector3()); this.fly(new THREE.Vector3(c.x, c.y - Parser.modelMaxDim*1.5, c.z), c); },
+    
+    frameObject(meshes) {
+      if(!Array.isArray(meshes)) meshes = [meshes];
+      if(meshes.length === 0) return;
+      const box = new THREE.Box3();
+      meshes.forEach(m => {
+          const tempMesh = m.clone();
+          tempMesh.position.copy(m.position);
+          tempMesh.updateMatrixWorld(true);
+          const mBox = new THREE.Box3().setFromObject(tempMesh);
+          box.expandByPoint(mBox.min);
+          box.expandByPoint(mBox.max);
+      });
+      const c = box.getCenter(new THREE.Vector3()); 
+      const sphere = box.getBoundingSphere(new THREE.Sphere());
+      const radius = sphere.radius;
+      if (radius <= 0) return;
+      let dist = radius / Math.sin(Viewer.perspCamera.fov * Math.PI / 360);
+      if(Viewer.perspCamera.aspect < 1) dist /= Viewer.perspCamera.aspect;
+      dist *= 1.3; 
+      const dir = this.getFrameDirection();
+      this.fly(c.clone().add(dir.multiplyScalar(dist)), c);
+    }
+  };
+
+  // =====================================================
+  // SECTION 32e: UI
+  // =====================================================
+  const UI = {
+    togglePanel(id) {
+      const p = document.getElementById(id);
+      if (!p) return;
+      const open = p.classList.contains('open');
+      this.closePanels();
+      if (!open) p.classList.add('open');
+    },
+    closePanels() { document.querySelectorAll('.side-panel').forEach(p => p.classList.remove('open')); },
+    updateHUD(e) {
+      const mouse = new THREE.Vector2((e.clientX/window.innerWidth)*2-1, -(e.clientY/window.innerHeight)*2+1);
+      const raycaster = new THREE.Raycaster(); raycaster.setFromCamera(mouse, Viewer.camera);
+      const hits = raycaster.intersectObjects(Parser.modelGroup.children, false);
+      if(hits.length) {
+        const p = hits[0].point.clone().add(Parser.globalOffset);
+        document.getElementById('coord-readout').innerText = 
+          `X: ${p.x.toFixed(1)}  Y: ${p.y.toFixed(1)}  Z: ${p.z.toFixed(1)}`;
+      }
+    },
+    setLoading(msg) {
+        document.getElementById('loader').style.display = msg ? 'block' : 'none';
+        if(msg) document.getElementById('loader-text').innerText = msg;
+    }
+  };
+
+  // =====================================================
+  // SECTION 32f: VIEW ENGINE
+  // =====================================================
+  const ViewEngine = {
+    edgesVisible: true, axesVisible: true, shadowsVisible: false,
+    sectionEdgesVisible: true, sectionEdgeLineWeight: 2.0,
+    
+    setFaceStyle(mode) {
+      ['shaded','xray','wireframe'].forEach(id => document.getElementById('style-'+id).classList.remove('selected'));
+      document.getElementById('style-'+mode).classList.add('selected');
+      Parser.modelGroup.children.forEach(mesh => {
+        if(mode === 'wireframe') { mesh.material.wireframe = true; mesh.material.transparent = false; }
+        else if (mode === 'xray') { mesh.material.wireframe = false; mesh.material.transparent = true; mesh.material.opacity = 0.35; }
+        else { mesh.material.wireframe = false; mesh.material.transparent = false; mesh.material.opacity = 1; }
+        mesh.material.needsUpdate = true;
+      });
+    },
+
+    setShadingModel(isFlat) {
+      document.getElementById('shade-smooth').classList.remove('selected');
+      document.getElementById('shade-flat').classList.remove('selected');
+      document.getElementById(isFlat ? 'shade-flat' : 'shade-smooth').classList.add('selected');
+      Parser.modelGroup.children.forEach(mesh => {
+        mesh.material.flatShading = isFlat;
+        mesh.material.needsUpdate = true;
+      });
+    },
+
+    setExplode(val) {
+      const factor = parseFloat(val) / 100.0;
+      document.getElementById('explode-val').innerText = val + '%';
+      const mode = document.getElementById('explode-by').value;
+      
+      ColorManager.setExplodePartColors(mode === 'part');
+
+      const groups = {};
+      Parser.modelGroup.children.forEach(mesh => {
+          const key = mode === 'part' ? mesh.userData.partNo || mesh.uuid : mesh.userData[mode] || 'Unknown';
+          if(!groups[key]) groups[key] = { meshes: [], box: new THREE.Box3() };
+          groups[key].meshes.push(mesh);
+          
+          if (!mesh.userData.basePosition) mesh.userData.basePosition = mesh.position.clone();
+          
+          const tempMesh = mesh.clone();
+          tempMesh.position.copy(mesh.userData.basePosition);
+          tempMesh.updateMatrixWorld(true);
+          const mBox = new THREE.Box3().setFromObject(tempMesh);
+          groups[key].box.expandByPoint(mBox.min);
+          groups[key].box.expandByPoint(mBox.max);
+      });
+      
+      for (let key in groups) {
+          const group = groups[key];
+          const groupCenter = group.box.getCenter(new THREE.Vector3());
+          let dir = groupCenter.clone().normalize();
+          if (dir.lengthSq() === 0) dir.set(0, 0, 1);
+          const shift = dir.multiplyScalar(factor * Parser.modelMaxDim * 0.4);
+          
+          group.meshes.forEach(m => {
+              m.position.copy(m.userData.basePosition).add(shift);
+          });
+      }
+    },
+
+    toggleEdges() {
+      this.edgesVisible = !this.edgesVisible;
+      document.getElementById('style-edges').classList.toggle('selected');
+      Parser.modelGroup.children.forEach(m => { 
+          m.children.forEach(child => {
+              if (child.name === 'edges') child.visible = this.edgesVisible && m.visible;
+          });
+      });
+      App.updateEdgeColors();
+    },
+    toggleSectionEdgeEnabled() {
+      this.sectionEdgesVisible = document.getElementById('enable-section-edge').checked;
+      Parser.modelGroup.children.forEach(m => {
+          m.children.forEach(child => {
+              if (child.name === 'sectionEdges') child.visible = this.sectionEdgesVisible && SectionManager.hasActiveClip() && m.visible;
+          });
+      });
+    },
+    updateSectionEdgeLineWeight(val) {
+      const w = parseFloat(val) || 1.0;
+      this.sectionEdgeLineWeight = w;
+      const inp = document.getElementById('section-edge-weight-input'); if (inp) inp.value = w;
+      Parser.modelGroup.children.forEach(m => {
+        m.traverse(child => {
+          if (child.name === 'sectionEdges' && child.material) {
+            child.material.linewidth = w;
+            child.material.needsUpdate = true;
+          }
+        });
+      });
+    },
+    updateSectionEdgeColor() {
+      const hex = document.getElementById('section-edge-color').value;
+      this.sectionEdgeColor = hex;
+      Parser.modelGroup.children.forEach(m => {
+          m.traverse(child => {
+              if (child.name === 'sectionEdges' && child.material) {
+                  child.material.color.set(hex);
+              }
+          });
+      });
+    },
+    // removed section fill support
+    toggleAxes() {
+      this.axesVisible = !this.axesVisible;
+      document.getElementById('style-axes').classList.toggle('selected');
+      if(Viewer.axes) Viewer.axes.visible = this.axesVisible;
+    },
+    toggleShadows() {
+      this.shadowsVisible = !this.shadowsVisible;
+      document.getElementById('shadow-toggle').classList.toggle('selected');
+      Viewer.renderer.shadowMap.enabled = this.shadowsVisible;
+      if (this.shadowsVisible) {
+          Viewer.scene.add(Viewer.sun);
+          Viewer.scene.add(Viewer.sunTarget);
+      } else {
+          Viewer.scene.remove(Viewer.sun);
+          Viewer.scene.remove(Viewer.sunTarget);
+      }
+      Parser.modelGroup.children.forEach(m => { m.castShadow = this.shadowsVisible; m.receiveShadow = this.shadowsVisible; });
+    }
+  };
+
+    // Measure tool moved to js/measure.js
+    // =====================================================
+  // SECTION 32h: OUTLINER
+  // =====================================================
+  const Outliner = {
+    data: {},
+    build() {
+        this.data = {};
+        Parser.modelGroup.children.forEach(mesh => {
+            const meta = mesh.userData;
+            const block = meta.midAssy || 'Assembly';
+            const sub = meta.subAssy || 'Subassembly';
+            const part = meta.partName || 'Part';
+            if(!this.data[block]) this.data[block] = {};
+            if(!this.data[block][sub]) this.data[block][sub] = [];
+            this.data[block][sub].push({ name: part, mesh: mesh });
+        });
+        this.render();
+    },
+    render() {
+        let html = '';
+        for(let block in this.data) {
+            const blockId = 'b_' + block.replace(/[^a-zA-Z0-9]/g, '_');
+            const safeBlock = encodeURIComponent(block);
+            let firstMeshColor = "cccccc";
+            outerLoop: for(let s in this.data[block]) {
+                if(this.data[block][s].length > 0) {
+                    firstMeshColor = this.data[block][s][0].mesh.userData.originalColor.getHexString();
+                    break outerLoop;
+                }
+            }
+            html += `
+            <div class="outliner-item" data-node-type="block" data-node-id="${blockId}" data-block="${safeBlock}">
+                <div class="outliner-left" onclick="Outliner.toggle('${blockId}')">
+                    <span class="material-icons" id="icon-${blockId}">folder</span>
+                    <span class="outliner-label" ondblclick="App.isolateNode('${blockId}')">${block}</span>
+                </div>
+                <div class="outliner-right">
+                    <input type="color" class="outliner-color-picker" value="#${firstMeshColor}" onchange="Outliner.changeColor('block', '${safeBlock}', null, this.value, event)" onclick="event.stopPropagation()">
+                    <span class="material-icons outliner-vis-icon vis-icon-block" data-block="${safeBlock}" onclick="Outliner.toggleVisibility('block', '${safeBlock}', null, event)">visibility</span>
+                </div>
+            </div>
+            <div id="${blockId}" style="display:none;">`;
+            
+            for(let sub in this.data[block]) {
+                const subId = blockId + '_s_' + sub.replace(/[^a-zA-Z0-9]/g, '_');
+                const safeSub = encodeURIComponent(sub);
+                let subMeshColor = this.data[block][sub].length > 0 ? this.data[block][sub][0].mesh.userData.originalColor.getHexString() : "cccccc";
+                html += `
+                <div class="outliner-item" data-node-type="sub" data-node-id="${subId}" data-block="${safeBlock}" data-sub="${safeSub}">
+                    <div class="outliner-left sub" onclick="Outliner.toggle('${subId}')">
+                        <span class="material-icons" id="icon-${subId}">folder_open</span>
+                        <span class="outliner-label" ondblclick="App.isolateNode('${subId}')">${sub}</span>
+                    </div>
+                    <div class="outliner-right">
+                        <input type="color" class="outliner-color-picker" value="#${subMeshColor}" onchange="Outliner.changeColor('sub', '${safeBlock}', '${safeSub}', this.value, event)" onclick="event.stopPropagation()">
+                        <span class="material-icons outliner-vis-icon vis-icon-sub" data-block="${safeBlock}" data-sub="${safeSub}" onclick="Outliner.toggleVisibility('sub', '${safeBlock}', '${safeSub}', event)">visibility</span>
+                    </div>
+                </div>
+                <div id="${subId}" style="display:none;">`;
+                
+                this.data[block][sub].forEach(item => {
+                    const meshColor = item.mesh.userData.originalColor.getHexString();
+                    html += `
+                    <div class="outliner-item part-item" data-node-type="part" data-node-id="${item.mesh.uuid}" data-mesh-uuid="${item.mesh.uuid}">
+                        <div class="outliner-left part" onclick="App.selectMeshByUUID('${item.mesh.uuid}')">
+                            <span class="material-icons">architecture</span>
+                            <span class="outliner-label" ondblclick="App.isolateNode('${item.mesh.uuid}')">${item.name}</span>
+                        </div>
+                        <div class="outliner-right">
+                            <input type="color" class="outliner-color-picker color-picker-part" data-uuid="${item.mesh.uuid}" value="#${meshColor}" onchange="Outliner.changeColor('part', '${item.mesh.uuid}', null, this.value, event)" onclick="event.stopPropagation()">
+                            <span class="material-icons outliner-vis-icon vis-icon-part" data-uuid="${item.mesh.uuid}" onclick="Outliner.toggleVisibility('part', '${item.mesh.uuid}', null, event)">${item.mesh.visible ? 'visibility' : 'visibility_off'}</span>
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+            }
+            html += `</div>`;
+        }
+        document.getElementById('outliner-content').innerHTML = html || '<div class="panelItem" style="justify-content:center;color:var(--panel-text);opacity:0.6;">Load a file to view assembly.</div>';
+        this.syncUI();
+    },
+    
+    toggle(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const icon = document.getElementById('icon-' + id);
+        if(el.style.display === 'none' || el.style.display === '') {
+            el.style.display = 'block';
+            if(icon) icon.innerText = icon.innerText === 'folder' ? 'folder_open' : 'folder_open';
+        } else {
+            el.style.display = 'none';
+            if(icon) icon.innerText = icon.innerText === 'folder_open' ? 'folder' : 'folder';
+        }
+    },
+
+    changeColor(type, param1, param2, colorHex, event) {
+        if(event) event.stopPropagation();
+        try {
+            const c = new THREE.Color(colorHex);
+            if (type === 'block') {
+                const block = decodeURIComponent(param1);
+                if (!this.data[block]) return;
+                for (let sub in this.data[block]) {
+                    if (this.data[block][sub]) {
+                        this.data[block][sub].forEach(item => {
+                            if (item && item.mesh) this.setMeshColor(item.mesh, c);
+                        });
+                    }
+                }
+            } else if (type === 'sub') {
+                const block = decodeURIComponent(param1);
+                const sub = decodeURIComponent(param2);
+                if (this.data[block] && this.data[block][sub]) {
+                    this.data[block][sub].forEach(item => {
+                        if (item && item.mesh) this.setMeshColor(item.mesh, c);
+                    });
+                }
+            } else if (type === 'part') {
+                const uuid = param1;
+                const mesh = Parser.modelGroup.children.find(m => m.uuid === uuid);
+                if(mesh) this.setMeshColor(mesh, c);
+            }
+            this.syncUI();
+            if (App && App.updateEdgeColors) App.updateEdgeColors();
+        } catch(e) {
+            console.warn('Color change error:', e);
+        }
+    },
+    
+    setMeshColor(mesh, color) {
+        mesh.userData.originalColor.copy(color);
+        if (!Selection.selectedNodes.includes(mesh)) {
+            mesh.material.color.copy(color);
+        }
+    },
+    
+    toggleVisibility(type, param1, param2, event) {
+        if(event) event.stopPropagation();
+        let meshesToToggle = [];
+        try {
+            if (type === 'block') {
+                const block = decodeURIComponent(param1);
+                if (!this.data[block]) return;
+                for (let sub in this.data[block]) {
+                    if (this.data[block][sub]) {
+                        this.data[block][sub].forEach(item => {
+                            if (item && item.mesh) meshesToToggle.push(item.mesh);
+                        });
+                    }
+                }
+            } else if (type === 'sub') {
+                const block = decodeURIComponent(param1);
+                const sub = decodeURIComponent(param2);
+                if (this.data[block] && this.data[block][sub]) {
+                    this.data[block][sub].forEach(item => {
+                        if (item && item.mesh) meshesToToggle.push(item.mesh);
+                    });
+                }
+            } else if (type === 'part') {
+                const uuid = param1;
+                if (Parser && Parser.modelGroup) {
+                    const mesh = Parser.modelGroup.children.find(m => m.uuid === uuid);
+                    if (mesh) meshesToToggle.push(mesh);
+                }
+            }
+            if (meshesToToggle.length > 0) {
+                const anyVisible = meshesToToggle.some(m => m && m.visible);
+                const targetVisibility = !anyVisible;
+                meshesToToggle.forEach(m => {
+                    if (m) {
+                        m.visible = targetVisibility;
+                        if (m.children) {
+                            m.children.forEach(child => {
+                                if (child && child.name === 'edges') {
+                                    child.visible = targetVisibility && ViewEngine.edgesVisible;
+                                }
+                                if (child && child.name === 'sectionEdges') {
+                                    child.visible = targetVisibility && ViewEngine.sectionEdgesVisible && SectionManager.hasActiveClip();
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+            this.syncUI();
+            if (App && App.updateEdgeColors) App.updateEdgeColors();
+        } catch(e) {
+            console.warn('Toggle visibility error:', e);
+        }
+    },
+
+    syncUI() {
+        document.querySelectorAll('.vis-icon-part').forEach(el => {
+            const uuid = el.getAttribute('data-uuid');
+            const mesh = Parser.modelGroup.children.find(m => m.uuid === uuid);
+            if (mesh) el.innerText = mesh.visible ? 'visibility' : 'visibility_off';
+        });
+        document.querySelectorAll('.vis-icon-sub').forEach(el => {
+            const block = decodeURIComponent(el.getAttribute('data-block'));
+            const sub = decodeURIComponent(el.getAttribute('data-sub'));
+            const meshes = this.data[block]?.[sub] || [];
+            const anyVisible = meshes.some(item => item.mesh.visible);
+            el.innerText = anyVisible ? 'visibility' : 'visibility_off';
+        });
+        document.querySelectorAll('.vis-icon-block').forEach(el => {
+            const block = decodeURIComponent(el.getAttribute('data-block'));
+            let anyVisible = false;
+            for (let sub in this.data[block] || {}) {
+                if (this.data[block][sub].some(item => item.mesh.visible)) {
+                    anyVisible = true;
+                    break;
+                }
+            }
+            el.innerText = anyVisible ? 'visibility' : 'visibility_off';
+        });
+        document.querySelectorAll('.color-picker-part').forEach(el => {
+            const uuid = el.getAttribute('data-uuid');
+            const mesh = Parser.modelGroup.children.find(m => m.uuid === uuid);
+            if (mesh) el.value = '#' + mesh.userData.originalColor.getHexString();
+        });
+    }
+  };
+
+  // =====================================================
+  // SECTION 32i: COLOR MANAGER
+  // =====================================================
+  const ColorManager = {
+    colorMaps: { Prefix: {}, Grade: {}, Thickness: {}, MidAssy: {}, SubAssy: {}, PartNumber: {} },
+    currentMode: loadSettings('colorMode', 'MidAssy'),
+    listVisible: true,
+    explodeOverride: false,
+    savedMode: null,
+
+    rebuild() {
+        const maps = { Prefix: {}, Grade: {}, Thickness: {}, MidAssy: {}, SubAssy: {}, PartNumber: {} };
+        Parser.modelGroup.children.forEach(mesh => {
+            const ud = mesh.userData;
+            const catMap = {
+                Prefix: ud.prefix || 'GENERIC',
+                Grade: ud.grade || 'NoGrade',
+                Thickness: ud.thickness || 'NoThk',
+                MidAssy: ud.midAssy || 'NoMidAssy',
+                SubAssy: ud.subAssy || 'NoSubAssy',
+                PartNumber: ud.partNo || mesh.uuid || 'Unknown'
+            };
+            for (let cat in catMap) {
+                const val = catMap[cat];
+                if (!maps[cat][val]) maps[cat][val] = [];
+                maps[cat][val].push(mesh);
+            }
+        });
+        for (let cat in maps) {
+            const items = Object.keys(maps[cat]);
+            items.forEach(item => {
+                if (!this.colorMaps[cat][item]) {
+                    let hash = 0;
+                    for (let i = 0; i < item.length; i++) {
+                        hash = item.charCodeAt(i) + ((hash << 5) - hash);
+                    }
+                    const hue = ((hash % 360) / 360 + 0.5) % 1.0;
+                    const color = new THREE.Color().setHSL(hue, 0.85, 0.55);
+                    this.colorMaps[cat][item] = color.getHexString();
+                }
+            });
+        }
+        document.getElementById('colorModeSelect').value = this.currentMode;
+        if (!this.explodeOverride) {
+            this.applyMode(this.currentMode);
+        } else {
+            this.applyPartNumberColors();
+        }
+        this.renderUI();
+    },
+
+    getColorForKey(key) {
+        let hash = 0;
+        for (let i = 0; i < key.length; i++) {
+            hash = key.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const hue = ((hash % 360) / 360 + 0.5) % 1.0;
+        return new THREE.Color().setHSL(hue, 0.8, 0.55);
+    },
+
+    applyMode(mode) {
+        this.currentMode = mode;
+        saveSettings('colorMode', mode);
+        const map = this.colorMaps[mode] || {};
+        Parser.modelGroup.children.forEach(mesh => {
+            const ud = mesh.userData;
+            let color;
+            if (mode === 'NativeColor') {
+                color = (ud && ud.originalColor) ? ud.originalColor.clone() : new THREE.Color(0x808080);
+            } else {
+                let val;
+                switch(mode) {
+                    case 'Prefix': val = ud.prefix || 'GENERIC'; break;
+                    case 'Grade': val = ud.grade || 'NoGrade'; break;
+                    case 'Thickness': val = ud.thickness || 'NoThk'; break;
+                    case 'MidAssy': val = ud.midAssy || 'NoMidAssy'; break;
+                    case 'SubAssy': val = ud.subAssy || 'NoSubAssy'; break;
+                    case 'PartNumber': val = ud.partNo || 'Unknown'; break;
+                    default: val = 'Unknown';
+                }
+                const hex = map[val] || '808080';
+                color = new THREE.Color('#' + hex);
+            }
+            if (color.getHSL({}).l < 0.15) {
+                color.setHSL(color.getHSL({}).h, 0.8, 0.5);
+            }
+            mesh.userData.originalColor.copy(color);
+            if (!Selection.selectedNodes.includes(mesh)) {
+                mesh.material.color.copy(color);
+            }
+        });
+        Outliner.syncUI();
+        App.updateEdgeColors();
+    },
+
+    applyPartNumberColors() {
+        this.explodeOverride = true;
+        this.currentMode = 'PartNumber';
+        document.getElementById('colorModeSelect').value = 'PartNumber';
+        Parser.modelGroup.children.forEach(mesh => {
+            const key = mesh.userData.partNo || mesh.uuid;
+            const color = this.getColorForKey(key);
+            mesh.userData.originalColor.copy(color);
+            if (!Selection.selectedNodes.includes(mesh)) {
+                mesh.material.color.copy(color);
+            }
+        });
+        Outliner.syncUI();
+        App.updateEdgeColors();
+    },
+
+    restoreMode() {
+        if (this.explodeOverride) {
+            this.explodeOverride = false;
+            const restoreMode = this.savedMode || 'MidAssy';
+            this.savedMode = null;
+            this.applyMode(restoreMode);
+        }
+    },
+
+    setExplodePartColors(enabled) {
+        if (enabled) {
+            if (!this.explodeOverride) {
+                this.savedMode = this.currentMode;
+            }
+            this.applyPartNumberColors();
+        } else {
+            this.restoreMode();
+        }
+    },
+
+    onModeChange() {
+        const select = document.getElementById('colorModeSelect');
+        this.currentMode = select.value;
+        saveSettings('colorMode', this.currentMode);
+        this.applyMode(this.currentMode);
+        this.renderUI();
+    },
+
+    renderUI() {
+        const container = document.getElementById('color-mapping-list');
+        if (!container) return;
+        if (!this.listVisible) {
+            container.innerHTML = '';
+            return;
+        }
+        const mode = this.currentMode;
+        const map = this.colorMaps[mode] || {};
+        let html = '';
+        const sorted = Object.keys(map).sort();
+        if (sorted.length === 0) {
+            container.innerHTML = '<div style="padding:20px;text-align:center;opacity:0.6;">No items to display</div>';
+            return;
+        }
+        sorted.forEach(item => {
+            const hex = map[item] || '808080';
+            const meshes = this.getMeshesForItem(mode, item);
+            const anyVisible = meshes.some(m => m && m.visible);
+            html += `
+                <div class="color-row" data-mode="${mode}" data-item="${item}">
+                    <span class="color-label" title="${item}" onclick="ColorManager.selectItem('${mode}', '${item}')">${item}</span>
+                    <span class="eye-icon material-icons" onclick="ColorManager.toggleItemVisibility('${mode}', '${item}')">${anyVisible ? 'visibility' : 'visibility_off'}</span>
+                    <input type="color" class="color-picker-small" value="#${hex}" 
+                           onchange="ColorManager.updateColor('${mode}', '${item}', this.value)" 
+                           onclick="event.stopPropagation()">
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    },
+
+    getMeshesForItem(mode, item) {
+        const result = [];
+        if (!Parser || !Parser.modelGroup || !Parser.modelGroup.children) return result;
+        Parser.modelGroup.children.forEach(mesh => {
+            if (!mesh || !mesh.userData) return;
+            const ud = mesh.userData;
+            let val;
+            switch(mode) {
+                case 'Prefix': val = ud.prefix || 'GENERIC'; break;
+                case 'Grade': val = ud.grade || 'NoGrade'; break;
+                case 'Thickness': val = ud.thickness || 'NoThk'; break;
+                case 'MidAssy': val = ud.midAssy || 'NoMidAssy'; break;
+                case 'SubAssy': val = ud.subAssy || 'NoSubAssy'; break;
+                default: val = 'Unknown';
+            }
+            if (val === item) result.push(mesh);
+        });
+        return result;
+    },
+
+    toggleItemVisibility(mode, item) {
+        const meshes = this.getMeshesForItem(mode, item);
+        if (meshes.length === 0) return;
+        const anyVisible = meshes.some(m => m.visible);
+        const target = !anyVisible;
+        meshes.forEach(m => {
+            m.visible = target;
+            m.children.forEach(child => {
+                if (child.name === 'edges') child.visible = target && ViewEngine.edgesVisible;
+                if (child.name === 'sectionEdges') child.visible = target && ViewEngine.sectionEdgesVisible && SectionManager.hasActiveClip();
+            });
+        });
+        this.renderUI();
+        Outliner.syncUI();
+    },
+
+    selectItem(mode, item) {
+        const meshes = this.getMeshesForItem(mode, item);
+        if (meshes.length === 0) return;
+        Selection.clearSelection();
+        meshes.forEach(m => Selection.addNode(m));
+        Camera.frameObject(meshes);
+    },
+
+    updateColor(mode, item, newHex) {
+        if (newHex.startsWith('#')) newHex = newHex.substring(1);
+        this.colorMaps[mode][item] = newHex;
+        this.applyMode(mode);
+        this.renderUI();
+        Outliner.syncUI();
+        App.updateEdgeColors();
+    },
+
+    toggleList() {
+        this.listVisible = !this.listVisible;
+        const icon = document.querySelector('.color-toggle-header .toggle-icon');
+        if (icon) {
+            icon.innerText = this.listVisible ? 'expand_less' : 'expand_more';
+        }
+        this.renderUI();
+    }
+  };
+
+  // =====================================================
+  // SECTION 32j: SEARCH
+  // =====================================================
+  const Search = {
+    execute() {
+      const q = document.getElementById('searchInput').value.trim().toUpperCase();
+      if(!q) return;
+      let found = 0, last = null;
+      let foundMeshes = [];
+      Parser.modelGroup.children.forEach(mesh => {
+        const part = (mesh.userData.partName || '').toUpperCase();
+        if(part.includes(q)) { 
+            mesh.visible = true; 
+            mesh.children.forEach(c => {
+               if (c.name === 'edges') c.visible = ViewEngine.edgesVisible;
+               if (c.name === 'sectionEdges') c.visible = ViewEngine.sectionEdgesVisible && SectionManager.hasActiveClip();
+            });
+            found++; last = mesh; foundMeshes.push(mesh);
+        } else {
+            mesh.visible = false;
+            mesh.children.forEach(c => c.visible = false);
+        }
+      });
+      const el = document.getElementById('search-results');
+      if(found) { 
+          el.innerHTML = `✅ Found ${found} part(s)`; 
+          Selection.clearSelection();
+          foundMeshes.forEach(m => Selection.addNode(m));
+          Camera.frameObject(foundMeshes);
+      }
+      else el.innerHTML = '❌ Part not found';
+      Outliner.syncUI();
+      ColorManager.renderUI();
+      App.updateEdgeColors();
+    },
+    reset() { 
+        Parser.modelGroup.children.forEach(m => {
+            m.visible = true;
+            m.children.forEach(c => {
+               if (c.name === 'edges') c.visible = ViewEngine.edgesVisible;
+               if (c.name === 'sectionEdges') c.visible = ViewEngine.sectionEdgesVisible && SectionManager.hasActiveClip();
+            });
+        }); 
+        document.getElementById('searchInput').value = ''; 
+        document.getElementById('search-results').innerHTML = ''; 
+        App.clearIsolation();
+        Camera.zoomExtents(); 
+        Outliner.syncUI();
+        ColorManager.renderUI();
+        App.updateEdgeColors();
+    }
+  };
+
+  // =====================================================
+  // SECTION 32l: SELECTION
+  // =====================================================
+  const Selection = {
+    selectedNodes: [],
+    highlightColor: '#ef5350',
+
+    setHighlightColor(hex) {
+      this.highlightColor = hex;
+      const c = new THREE.Color(hex);
+      this.selectedNodes.forEach(m => { m.material.color.copy(c); });
+    },
+
+    addNode(mesh) {
+        if (!this.selectedNodes.includes(mesh)) {
+            this.selectedNodes.push(mesh);
+            mesh.material.color.copy(new THREE.Color(this.highlightColor));
+            this.updateInfoPanel();
+        } else {
+            this.selectedNodes = this.selectedNodes.filter(m => m !== mesh);
+            if (mesh.userData.originalColor) mesh.material.color.copy(mesh.userData.originalColor);
+            this.updateInfoPanel();
+        }
+    },
+    
+    updateInfoPanel() {
+        if (this.selectedNodes.length === 0) {
+            document.getElementById('selected-part-name').innerText = 'None';
+            document.getElementById('info-content').innerHTML = '<tr><td style="padding:18px;text-align:center;color:var(--panel-text);opacity:0.6;">Select a part in 3D (Shift+Click for multi)</td></tr>';
+            return;
+        }
+
+        if (this.selectedNodes.length === 1) {
+            const mesh = this.selectedNodes[0];
+            document.getElementById('selected-part-name').innerText = mesh.userData.partName || 'Part';
+            const volume = computeMeshVolume(mesh);
+            const weight = volume * 7850 / 1e9;
+            const wtFromFile = mesh.userData.wt;
+            const weightDisplay = wtFromFile ? `${parseFloat(wtFromFile).toFixed(1)} kg (net)` : 
+                                  (weight > 0 ? `${weight.toFixed(1)} kg (computed)` : 'N/A');
+            const box = mesh.geometry.boundingBox;
+            const L = box.max.x - box.min.x, B = box.max.y - box.min.y, H = box.max.z - box.min.z;
+            const cogX = ((box.max.x + box.min.x)/2) + Parser.globalOffset.x;
+            const cogY = ((box.max.y + box.min.y)/2) + Parser.globalOffset.y;
+            const cogZ = ((box.max.z + box.min.z)/2) + Parser.globalOffset.z;
+
+            let html = `
+              <tr><td style="font-weight:700; color:var(--accent); text-transform:uppercase;" colspan="2">Shipyard Data</td></tr>
+              <tr><td>C.O.G (X,Y,Z)</td><td style="text-align:right; font-weight:700;">${cogX.toFixed(0)}, ${cogY.toFixed(0)}, ${cogZ.toFixed(0)}</td></tr>
+              <tr><td>Bounding (L×B×H)</td><td style="text-align:right; font-weight:700;">${L.toFixed(0)} × ${B.toFixed(0)} × ${H.toFixed(0)} mm</td></tr>
+              <tr><td>Volume</td><td style="text-align:right; font-weight:700;">${(volume/1e9).toFixed(6)} m³</td></tr>
+              <tr><td>Weight</td><td style="text-align:right; font-weight:700;">${weightDisplay}</td></tr>
+              <tr><td style="font-weight:700; color:var(--accent); border-top:2px solid var(--panel-border); text-transform:uppercase;" colspan="2">Metadata</td></tr>
+            `;
+            for(let k in mesh.userData) {
+              if(['originalColor','partName','partNo','thickness','grade','midAssy','subAssy','subpanel','prefix','wt','fileSource','basePosition'].includes(k)) continue;
+              html += `<tr><td>${k}</td><td style="text-align:right; font-weight:500;">${mesh.userData[k]}</td></tr>`;
+            }
+            document.getElementById('info-content').innerHTML = html;
+        } else {
+            document.getElementById('selected-part-name').innerText = `${this.selectedNodes.length} items selected`;
+            let totalWeight = 0;
+            this.selectedNodes.forEach(m => {
+                const w = parseFloat(m.userData.wt);
+                if (!isNaN(w)) totalWeight += w;
+                else totalWeight += (computeMeshVolume(m) * 7850 / 1e9);
+            });
+            document.getElementById('info-content').innerHTML = `
+              <tr><td style="font-weight:700; color:var(--accent); text-transform:uppercase;" colspan="2">Multi-Selection</td></tr>
+              <tr><td>Parts Selected</td><td style="text-align:right; font-weight:700;">${this.selectedNodes.length}</td></tr>
+              <tr><td>Estimated Weight</td><td style="text-align:right; font-weight:700;">${totalWeight.toFixed(1)} kg</td></tr>
+            `;
+        }
+    },
+
+    clearSelection() {
+        this.selectedNodes.forEach(m => {
+            if (m.userData.originalColor) m.material.color.copy(m.userData.originalColor);
+        });
+        this.selectedNodes = [];
+        this.updateInfoPanel();
+    }
+  };
+
+  function computeMeshVolume(mesh) {
+    const geo = mesh.geometry;
+    if (!geo) return 0;
+    const pos = geo.attributes.position;
+    const idx = geo.index;
+    if (!pos || !idx) return 0;
+    let volume = 0;
+    const v = new THREE.Vector3();
+    const a = new THREE.Vector3();
+    const b = new THREE.Vector3();
+    const c = new THREE.Vector3();
+    for (let i = 0; i < idx.count; i += 3) {
+        const i0 = idx.getX(i); const i1 = idx.getX(i+1); const i2 = idx.getX(i+2);
+        a.fromBufferAttribute(pos, i0); b.fromBufferAttribute(pos, i1); c.fromBufferAttribute(pos, i2);
+        v.crossVectors(b, c); volume += a.dot(v);
+    }
+    return Math.abs(volume) / 6;
+  }
+
+  // =====================================================
+  // SECTION 32m: PARSER (using standard LineSegments)
+  // =====================================================
+  const Parser = {
+    modelGroup: new THREE.Group(), 
+    modelMaxDim: 1000, 
+    modelBox: null, 
+    globalOffset: new THREE.Vector3(0,0,0),
+    fileDataList: [],
+    bbox: { min: new THREE.Vector3(0,0,0), max: new THREE.Vector3(0,0,0) },
+    
+    init() {
+      Viewer.scene.add(this.modelGroup);
+    },
+
+    collectParts(text, fileName) {
+      const lines = text.split('\n');
+      const parts = [];
+      let i = 0;
+      while(i < lines.length) {
+          let line = lines[i].trim();
+          if(line.startsWith('I obi')) {
+              let meta = {};
+              line.split(';').forEach(p => {
+                  let segment = p.trim();
+                  if (segment.startsWith('I obi ')) {
+                      segment = segment.substring(6).trim();
+                  }
+                  const idx = segment.indexOf(' ');
+                  if (idx > 0) {
+                      meta[segment.substring(0, idx).trim()] = segment.substring(idx + 1).trim();
+                  }
+              });
+              while(i < lines.length && !lines[i].trim().startsWith('fs ')) i++;
+              if(i >= lines.length) break;
+              const fsParts = lines[i].trim().split(/\s+/);
+              const vCount = parseInt(fsParts[1], 10), fCount = parseInt(fsParts[2], 10);
+              let geomLines = []; i++;
+              while(i < lines.length && !lines[i].trim().startsWith('I obi')) { 
+                  geomLines.push(lines[i]); i++; 
+              }
+              const tokens = geomLines.join(' ').replace(/#/g,'').trim().split(/\s+/);
+              let t=0, positions=[], indices=[];
+              for(let j=0; j<vCount*3 && t<tokens.length; j++) positions.push(parseFloat(tokens[t++]));
+              let facesParsed=0;
+              while(facesParsed < fCount && t < tokens.length) {
+                  const poly = parseInt(tokens[t++], 10);
+                  if(poly === 3) { indices.push(parseInt(tokens[t++], 10), parseInt(tokens[t+1], 10), parseInt(tokens[t+3], 10)); t+=5; facesParsed++; }
+                  else if(poly === 4) { let a=parseInt(tokens[t++], 10); t++; let b=parseInt(tokens[t++], 10); t++; let c=parseInt(tokens[t++], 10); t++; let d=parseInt(tokens[t++], 10); t++; indices.push(a,b,c,a,c,d); facesParsed++; }
+                  else { let f=[]; for(let p=0;p<poly;p++){ f.push(parseInt(tokens[t++], 10)); t++; } for(let p=1;p<poly-1;p++) indices.push(f[0],f[p],f[p+1]); facesParsed++; }
+              }
+              if(positions.length && indices.length) {
+                  parts.push({ meta, positions, indices, fileSource: fileName });
+              }
+          } else i++;
+      }
+      return parts;
+    },
+
+    addFile(name, rawParts) {
+      this.fileDataList.push({ name, rawParts });
+    },
+
+    removeFile(name) {
+      this.fileDataList = this.fileDataList.filter(f => f.name !== name);
+    },
+
+        buildAllFiles() {
+            const hadModel = !!this.modelBox;
+            while(this.modelGroup.children.length) this.modelGroup.remove(this.modelGroup.children[0]);
+      if (this.fileDataList.length === 0) {
+        this.modelBox = null; this.modelMaxDim = 1; this.globalOffset.set(0,0,0);
+        this.bbox.min.set(0,0,0); this.bbox.max.set(0,0,0); Viewer.updateAxes(1, this.globalOffset);
+        Outliner.build(); ColorManager.rebuild(); ColorManager.renderUI();
+        App.updateFileBar(); SectionManager.loadFromStorage();
+        return;
+      }
+      let allParts = [];
+      this.fileDataList.forEach(f => allParts = allParts.concat(f.rawParts));
+      if (allParts.length === 0) return;
+
+      let minX = Infinity, minY = Infinity, minZ = Infinity;
+      let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+      allParts.forEach(part => {
+          for (let j = 0; j < part.positions.length; j += 3) {
+              const x = part.positions[j], y = part.positions[j+1], z = part.positions[j+2];
+              if (x < minX) minX = x; if (x > maxX) maxX = x;
+              if (y < minY) minY = y; if (y > maxY) maxY = y;
+              if (z < minZ) minZ = z; if (z > maxZ) maxZ = z;
+          }
+      });
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+      const centerZ = (minZ + maxZ) / 2;
+      this.globalOffset.set(centerX, centerY, centerZ);
+      this.modelMaxDim = Math.max(maxX - minX, maxY - minY, maxZ - minZ);
+      this.bbox.min.set(minX, minY, minZ);
+      this.bbox.max.set(maxX, maxY, maxZ);
+
+      allParts.forEach(part => {
+          const shiftedPositions = new Float32Array(part.positions.length);
+          for (let j = 0; j < part.positions.length; j += 3) {
+              shiftedPositions[j]   = part.positions[j] - centerX;
+              shiftedPositions[j+1] = part.positions[j+1] - centerY;
+              shiftedPositions[j+2] = part.positions[j+2] - centerZ;
+          }
+          const geo = new THREE.BufferGeometry();
+          geo.setAttribute('position', new THREE.BufferAttribute(shiftedPositions, 3));
+          geo.setIndex(part.indices);
+          geo.computeVertexNormals();
+
+          const meta = part.meta;
+          const partNo = meta['NCH_PART'] || meta['NCH_PART_NUMBER'] || meta['NCH_PARTNO'] || meta['NCH_NCH_PART'] || meta['NCH_NCH_PART_NUMBER'] || 'Unknown';
+          const thickness = meta['NCH_NCH_THICKNESS'] || 'NoThk';
+          const grade = meta['NCH_NCH_MATERIAL'] || 'NoGrade';
+          const panel = meta['NCH_PANEL'] || meta['NCH_NCH_PANEL'] || 'NoMidAssy';
+          const rawSub = meta['NCH_SUBASSEMBLY'] || meta['NCH_NCH_SUBASSEMBLY'] || '';
+          const subpanel = meta['NCH_SUBPANEL'] || '';
+          const subAssy = rawSub || subpanel || 'NoSubAssy';
+          const prefixMatch = partNo.match(/^[A-Za-z]+/);
+          const prefix = prefixMatch ? prefixMatch[0].toUpperCase() : 'GENERIC';
+          const wt = meta['NCH_NCH_NETTO-WEIGHT'] || '';
+
+          const pStr = panel === 'NoMidAssy' ? 'NoPanel' : panel;
+          const spStr = subpanel ? subpanel + '-' : '';
+          let richName = `${pStr} - ${spStr}${partNo}-${thickness}mm`;
+          if (wt) richName += `-Wt: ${wt}kg`;
+          if (grade !== 'NoGrade') richName += ` - ${grade}`;
+
+          // Extract native color from file
+          const rawColor = meta['NCH_COLOR'] || '';
+          let defaultColor;
+          if (rawColor) {
+              const rgb = rawColor.split(' ').map(Number);
+              if (rgb.length >= 3) {
+                  defaultColor = new THREE.Color(
+                      Math.min(1, rgb[0]/255),
+                      Math.min(1, rgb[1]/255),
+                      Math.min(1, rgb[2]/255)
+                  );
+                  console.log('Native color found:', defaultColor.getHexString(), 'for:', partNo);
+              } else {
+                  defaultColor = new THREE.Color(0x808080);
+              }
+          } else {
+              defaultColor = new THREE.Color(0x808080);
+          }
+          
+          const mat = new THREE.MeshStandardMaterial({ 
+              color: defaultColor, 
+              side: THREE.DoubleSide, 
+              roughness: 0.55, 
+              metalness: 0.35,
+              polygonOffset: true, 
+              polygonOffsetFactor: 1, 
+              polygonOffsetUnits: 1,
+              clippingPlanes: Object.values(Viewer.clippingPlanes), 
+              clipIntersection: false,
+              clipShadows: true
+          });
+          const mesh = new THREE.Mesh(geo, mat);
+          mesh.userData = {
+              partName: richName, partNo, thickness, grade, midAssy: panel, subAssy,
+              subpanel, prefix, wt, fileSource: part.fileSource || 'Unknown', originalColor: defaultColor.clone(), ...meta
+          };
+
+          // ===== EDGES using standard LineSegments (reliable) =====
+          const edgeMat = new THREE.LineBasicMaterial({ 
+              color: 0x000000, 
+              linewidth: Viewer.thickLineWeight || 2.0,
+              clippingPlanes: Object.values(Viewer.clippingPlanes), 
+              clipShadows: true 
+          });
+          const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), edgeMat);
+          edges.name = 'edges';
+          edges.visible = ViewEngine.edgesVisible;
+
+          mesh.add(edges);
+          this.modelGroup.add(mesh);
+      });
+
+      this.modelBox = new THREE.Box3().setFromObject(this.modelGroup);
+      Viewer.updateAxes(this.modelMaxDim * 0.5, this.globalOffset);
+      
+      App.updateSun();
+      Outliner.build();
+      ColorManager.rebuild();
+      ColorManager.renderUI();
+      App.updateFileBar();
+      App.reapplyHiddenState();
+    // Only perform the initial isometric framing when a model is opened for the first time
+    if (!hadModel) Camera.isometric();
+      SectionManager.updateRanges();
+      SectionManager.loadFromStorage();
+      App.updateEdgeColors();
+    }
+  };
+
+  // =====================================================
+  // SECTION 32n: APP ROUTING
+  // =====================================================
+  const App = {
+    tool: 'select', navMode: 'orbit', isDraggingZoom: false, prevY: 0,
+    isolatedNode: null, _appendMode: false, contextMesh: null,
+    hiddenStack: [],
+    pickPlaneAxis: null, touchTimer: null, touchStartPos: {x:0, y:0},
+    isLensDragging: false,
+    
+    init() {
+      Viewer.init(); Parser.init(); MeasureTool.init();
+      
+      const sunSettings = loadSettings('sun', { az: 45, el: 30, int: 100 });
+      document.getElementById('sun-azimuth').value = sunSettings.az;
+      document.getElementById('sun-elevation').value = sunSettings.el;
+      document.getElementById('sun-intensity').value = sunSettings.int;
+      this.updateSun();
+
+      document.getElementById('fileInput').addEventListener('change', async (e) => {
+          const files = e.target.files;
+          if (files.length === 0) return;
+          
+          // Filter files
+          const validFiles = Array.from(files).filter(f => {
+              const name = f.name.toLowerCase();
+              return name.endsWith('.3dd') || name.endsWith('.3dcsl');
+          });
+          
+          if (validFiles.length === 0) {
+              UI.setLoading('Please select .3dd or .3dcsl files');
+              setTimeout(() => UI.setLoading(null), 2000);
+              return;
+          }
+          
+          UI.setLoading('Reading Files...');
+          
+          const promises = validFiles.map(async (f) => {
+              try {
+                  const buffer = await f.arrayBuffer();
+                  const isEncrypted = f.name.toLowerCase().endsWith('.3dcsl');
+                  let text;
+                  
+                  if (isEncrypted) {
+                      UI.setLoading(`Decrypting ${f.name}...`);
+                      const data = new Uint8Array(buffer);
+                      console.log(`File: ${f.name}, Size: ${data.length} bytes`);
+                      
+                      const decrypted = await decryptAES(data, ENCRYPTION_PASSWORD);
+                      if (!decrypted) {
+                          UI.setLoading(`Failed to decrypt ${f.name}`);
+                          return null;
+                      }
+                      text = decrypted;
+                      console.log(`Decrypted ${f.name}: ${text.length} chars`);
+                  } else {
+                      text = new TextDecoder('utf-8').decode(buffer);
+                  }
+                  
+                  // Validate
+                  if (!text.includes('I obi')) {
+                      console.warn(`${f.name} may not be a valid 3DD file`);
+                      UI.setLoading(`Warning: ${f.name} may not be a valid 3DD file`);
+                      return null;
+                  }
+                  
+                  return { name: f.name, text: text };
+              } catch (err) {
+                  console.error(`Error processing ${f.name}:`, err);
+                  UI.setLoading(`Error: ${err.message}`);
+                  return null;
+              }
+          });
+          
+          const results = await Promise.all(promises);
+          const validResults = results.filter(r => r !== null);
+          
+          if (validResults.length === 0) {
+              UI.setLoading('No valid files loaded');
+              setTimeout(() => UI.setLoading(null), 2000);
+              return;
+          }
+          
+          UI.setLoading('Parsing Geometry...');
+          setTimeout(() => {
+              if (!this._appendMode) Parser.fileDataList = [];
+              validResults.forEach(res => {
+                  const parts = Parser.collectParts(res.text, res.name);
+                  if (parts.length > 0) {
+                      console.log(`Found ${parts.length} parts in ${res.name}`);
+                      Parser.addFile(res.name, parts);
+                  }
+              });
+              UI.setLoading('Building Scene...');
+              setTimeout(() => {
+                  try {
+                      Parser.buildAllFiles();
+                      // Apply color mode
+                      if (ColorManager.applyCurrentMode) {
+                          ColorManager.applyCurrentMode();
+                      }
+                      console.log('Scene built successfully');
+                  } catch(err) {
+                      console.error('Build error:', err);
+                      UI.setLoading('Error: ' + err.message);
+                      return;
+                  }
+                  UI.setLoading(null);
+                  this._appendMode = false;
+              }, 50);
+          }, 50);
+      });
+
+      const showContext = (clientX, clientY, event) => {
+          if(this.tool !== 'select') return;
+          if (event && event.preventDefault) event.preventDefault();
+          if(!clientX || !clientY) return;
+
+          const mouse = new THREE.Vector2((clientX/window.innerWidth)*2-1, -(clientY/window.innerHeight)*2+1);
+          const raycaster = new THREE.Raycaster(); raycaster.setFromCamera(mouse, Viewer.camera);
+          const hits = raycaster.intersectObjects(Parser.modelGroup.children, false);
+          const visibleHits = hits.filter(hit => hit.object.visible);
+          
+            const bar = document.getElementById('actions-bar');
+            const getChk = (a) => bar.querySelector(`input[data-action="${a}"]`);
+            const getBtn = (a) => bar.querySelector(`button.icon-btn[data-action="${a}"]`);
+
+            if (visibleHits.length > 0) {
+              this.contextMesh = visibleHits[0].object;
+              if(!Selection.selectedNodes.includes(this.contextMesh)) {
+               Selection.clearSelection();
+               Selection.addNode(this.contextMesh);
+              }
+              // enable actions that require a hit
+              if (getBtn('zoom')) getBtn('zoom').disabled = false;
+              if (getBtn('isolate')) getBtn('isolate').disabled = false;
+              if (getBtn('hide')) getBtn('hide').disabled = !this.contextMesh.visible;
+            } else {
+              // keep previous button states; do not disable icons when clicking empty area
+              this.contextMesh = null;
+            }
+
+            if (this.hiddenStack && this.hiddenStack.length > 0) {
+              if (getBtn('unhide')) getBtn('unhide').disabled = false;
+              if (getBtn('unhide-all')) getBtn('unhide-all').disabled = false;
+            } else {
+              // do not force-disable unhide buttons on empty clicks
+            }
+
+            // do not visually move the actions bar on right-click (no pulse)
+      };
+
+      Viewer.renderer.domElement.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          showContext(e.clientX, e.clientY, e);
+      });
+      Viewer.renderer.domElement.addEventListener('pointercancel', () => {
+          if (this.touchTimer) {
+              clearTimeout(this.touchTimer);
+              this.touchTimer = null;
+          }
+      });
+
+      document.getElementById('context-menu').addEventListener('click', (e) => {
+          const item = e.target.closest('.menu-item');
+          if (!item) return;
+          const action = item.dataset.action;
+          
+              if (action === 'hide') {
+              let hiddenMeshes = [...Selection.selectedNodes];
+              if (hiddenMeshes.length === 0 && this.contextMesh) {
+                  hiddenMeshes = [this.contextMesh];
+              }
+              if (hiddenMeshes.length > 0) {
+                  this.hiddenStack.push(hiddenMeshes.map(m => ({
+                      uuid: m.uuid,
+                      partName: m.userData && m.userData.partName,
+                      partNo: m.userData && m.userData.partNo,
+                      fileSource: m.userData && m.userData.fileSource,
+                      midAssy: m.userData && m.userData.midAssy,
+                      subAssy: m.userData && m.userData.subAssy,
+                      mesh: m
+                  })));
+              }
+              hiddenMeshes.forEach(m => {
+                  m.visible = false;
+                  m.children.forEach(c => c.visible = false);
+              });
+              Outliner.syncUI(); ColorManager.renderUI();
+              Selection.clearSelection();
+          } else if (action === 'unhide') {
+              const lastHidden = this.hiddenStack.pop();
+              if (lastHidden && lastHidden.length > 0) {
+                  lastHidden.forEach(entry => {
+                      const target = Parser.modelGroup.children.find(m => {
+                          const ud = m.userData || {};
+                          return m.uuid === entry.uuid ||
+                               (ud.partName === entry.partName && ud.fileSource === entry.fileSource && ud.partNo === entry.partNo);
+                      }) || entry.mesh;
+                      if (!target) return;
+                      target.visible = true;
+                      target.children.forEach(c => {
+                          if (c.name === 'edges') c.visible = ViewEngine.edgesVisible;
+                          if (c.name === 'sectionEdges') c.visible = ViewEngine.sectionEdgesVisible && SectionManager.hasActiveClip();
+                      });
+                  });
+              }
+              Outliner.syncUI(); ColorManager.renderUI();
+          } else if (action === 'unhide-all') {
+              this.hiddenStack = [];
+              Parser.modelGroup.children.forEach(m => {
+                  m.visible = true;
+                  m.children.forEach(c => {
+                      if (c.name === 'edges') c.visible = ViewEngine.edgesVisible;
+                      if (c.name === 'sectionEdges') c.visible = ViewEngine.sectionEdgesVisible && SectionManager.hasActiveClip();
+                  });
+              });
+              Outliner.syncUI(); ColorManager.renderUI();
+          } else if (action === 'zoom') {
+              Camera.frameObject(Selection.selectedNodes);
+          } else if (action === 'isolate') {
+              if (Selection.selectedNodes.length > 0) {
+                  this.isolateNode('multi', 'isolate', 'Isolated', [...Selection.selectedNodes]);
+              }
+          }
+          document.getElementById('context-menu').style.display = 'none';
+      });
+
+      // Actions bar: icon buttons run action directly
+      document.querySelectorAll('#actions-bar .icon-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const action = btn.dataset.action;
+          const menuBtn = document.querySelector(`#context-menu [data-action="${action}"]`);
+          if (menuBtn) menuBtn.click();
+        });
+      });
+
+      document.addEventListener('click', (e) => { 
+          if(!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display = 'none'; 
+      });
+
+      Viewer.renderer.domElement.addEventListener('dblclick', (e) => {
+          const mouse = new THREE.Vector2((e.clientX/window.innerWidth)*2-1, -(e.clientY/window.innerHeight)*2+1);
+          const raycaster = new THREE.Raycaster(); raycaster.setFromCamera(mouse, Viewer.camera);
+          const hits = raycaster.intersectObjects(Parser.modelGroup.children, false);
+          const visibleHits = hits.filter(hit => hit.object.visible);
+          if (visibleHits.length > 0) {
+              const mesh = visibleHits[0].object;
+              this.isolateNode('part', mesh.uuid, mesh.userData.partName || 'Part', [mesh]);
+          } else {
+              this.clearIsolation();
+          }
+      });
+
+        // Touch double-tap support: treat two quick taps as a double-click (isolate)
+        let _lastTouchTap = 0;
+        let _lastTouchPos = { x: 0, y: 0 };
+        Viewer.renderer.domElement.addEventListener('pointerup', (e) => {
+        if (e.pointerType !== 'touch') return;
+        const now = performance.now();
+        const dx = Math.abs(e.clientX - _lastTouchPos.x);
+        const dy = Math.abs(e.clientY - _lastTouchPos.y);
+        const dt = now - _lastTouchTap;
+        _lastTouchTap = now;
+        _lastTouchPos.x = e.clientX; _lastTouchPos.y = e.clientY;
+        // if second tap within 350ms and not moved much, consider double-tap
+        if (dt > 0 && dt < 350 && dx < 30 && dy < 30) {
+          const mouse = new THREE.Vector2((e.clientX/window.innerWidth)*2-1, -(e.clientY/window.innerHeight)*2+1);
+          const raycaster = new THREE.Raycaster(); raycaster.setFromCamera(mouse, Viewer.camera);
+          const hits = raycaster.intersectObjects(Parser.modelGroup.children, false);
+          const visibleHits = hits.filter(hit => hit.object.visible);
+          if (visibleHits.length > 0) {
+            const mesh = visibleHits[0].object;
+            App.isolateNode('part', mesh.uuid, mesh.userData.partName || 'Part', [mesh]);
+          } else {
+            App.clearIsolation();
+          }
+          e.preventDefault();
+        }
+        });
+
+      window.addEventListener('keydown', (e) => {
+         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+         const key = e.key.toLowerCase();
+         if (key === 'escape') { Selection.clearSelection(); this.setTool('select'); }
+         if (key === 'f') { if (Selection.selectedNodes.length > 0) Camera.frameObject(Selection.selectedNodes); }
+         if (key === 'h' || key === 'delete') { 
+             const hiddenMeshes = [...Selection.selectedNodes];
+             if (hiddenMeshes.length > 0) {
+                 this.hiddenStack.push(hiddenMeshes.map(m => ({
+                     uuid: m.uuid,
+                     partName: m.userData && m.userData.partName,
+                     partNo: m.userData && m.userData.partNo,
+                     fileSource: m.userData && m.userData.fileSource,
+                     midAssy: m.userData && m.userData.midAssy,
+                     subAssy: m.userData && m.userData.subAssy,
+                     mesh: m
+                 })));
+             }
+             hiddenMeshes.forEach(m => {
+                m.visible = false;
+                m.children.forEach(c => c.visible = false);
+             });
+             Selection.clearSelection();
+             Outliner.syncUI(); ColorManager.renderUI();
+         }
+         if (key === ' ') { this.setTool('select'); this.setNavMode('orbit'); e.preventDefault(); }
+      });
+
+      Viewer.renderer.domElement.addEventListener('wheel', (e) => {
+          if (this.navMode !== 'zoom' && this.navMode !== 'orbit') return;
+          e.preventDefault();
+          const mouse = new THREE.Vector2((e.clientX/window.innerWidth)*2-1, -(e.clientY/window.innerHeight)*2+1);
+          const raycaster = new THREE.Raycaster(); raycaster.setFromCamera(mouse, Viewer.camera);
+          let pt;
+          const rawHits = raycaster.intersectObjects(Parser.modelGroup.children, true);
+          const hits = rawHits.filter(hit => hit.object.visible && hit.object.name !== 'sectionEdges' && hit.object.name !== 'edges');
+          if (hits.length > 0) {
+              pt = hits[0].point;
+          } else {
+              const dist = Viewer.controls.target.distanceTo(Viewer.camera.position);
+              pt = new THREE.Vector3();
+              raycaster.ray.at(dist, pt);
+          }
+          const zoomFactor = e.deltaY > 0 ? 1.15 : 0.85;
+          const dirCam = new THREE.Vector3().subVectors(Viewer.camera.position, pt);
+          Viewer.camera.position.copy(pt).add(dirCam.multiplyScalar(zoomFactor));
+          
+          if (Viewer.isOrtho) {
+              Viewer.orthoCamera.zoom *= (e.deltaY > 0 ? 0.85 : 1.15);
+              Viewer.orthoCamera.updateProjectionMatrix();
+          } else {
+              const dirTarget = new THREE.Vector3().subVectors(Viewer.controls.target, pt);
+              Viewer.controls.target.copy(pt).add(dirTarget.multiplyScalar(zoomFactor));
+          }
+          Viewer.controls.update();
+      }, { passive: false });
+
+      Viewer.renderer.domElement.addEventListener('pointermove', e => {
+        UI.updateHUD(e);
+        
+        if (this.touchTimer && (Math.abs(e.clientX - this.touchStartPos.x) > 10 || Math.abs(e.clientY - this.touchStartPos.y) > 10)) {
+            clearTimeout(this.touchTimer); this.touchTimer = null;
+        }
+
+        if (this.isDraggingZoom) {
+            const deltaY = e.clientY - this.prevY; this.prevY = e.clientY;
+            const dir = new THREE.Vector3().subVectors(Viewer.camera.position, Viewer.controls.target);
+            if (deltaY > 0) dir.multiplyScalar(1.05); else if (deltaY < 0) dir.multiplyScalar(0.95);
+            Viewer.camera.position.copy(Viewer.controls.target).add(dir);
+            if (Viewer.isOrtho) {
+                Viewer.orthoCamera.zoom *= (deltaY > 0 ? 0.95 : 1.05);
+                Viewer.orthoCamera.updateProjectionMatrix();
+            }
+        }
+        
+        if (this.isLensDragging) {
+            MeasureTool.onMove(e, true);
+        } else if (['measure', 'section-pick', 'section-custom'].includes(this.tool)) {
+            MeasureTool.onMove(e, false);
+        } else {
+            if (MeasureTool.snapCursor) MeasureTool.snapCursor.visible = false; 
+            document.getElementById('magnifier-lens').style.display = 'none'; 
+        }
+      });
+      
+      Viewer.renderer.domElement.addEventListener('pointerdown', e => {
+        if (e.pointerType === 'touch') {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        this.touchStartPos = {x: e.clientX, y: e.clientY};
+        document.getElementById('canvas-container').classList.add('grabbing');
+        UI.closePanels();
+        
+        if(e.pointerType === 'touch' && this.tool === 'select') {
+            this.touchTimer = setTimeout(() => showContext(e.clientX, e.clientY), 3000);
+        }
+
+        if (this.navMode === 'zoom' && e.pointerType !== 'touch') { this.isDraggingZoom = true; this.prevY = e.clientY; return; }
+        
+        if (['measure', 'section-pick', 'section-custom'].includes(this.tool)) {
+            Viewer.controls.enabled = false;
+            this.isLensDragging = true;
+            if (e && e.pointerId !== undefined && Viewer.renderer.domElement.setPointerCapture) {
+                Viewer.renderer.domElement.setPointerCapture(e.pointerId);
+            }
+            MeasureTool.onMove(e, true);
+            return;
+        }
+
+        const mouse = new THREE.Vector2((e.clientX/window.innerWidth)*2-1, -(e.clientY/window.innerHeight)*2+1);
+        const raycaster = new THREE.Raycaster(); raycaster.setFromCamera(mouse, Viewer.camera);
+        const hits = raycaster.intersectObjects(Parser.modelGroup.children, false);
+        const visibleHits = hits.filter(hit => hit.object.visible);
+        
+        if(visibleHits.length) {
+          const hit = visibleHits[0];
+
+          if(this.navMode === 'orbit') {
+              const dist = Viewer.camera.position.distanceTo(hit.point);
+              const dir = new THREE.Vector3(); Viewer.camera.getWorldDirection(dir);
+              Viewer.controls.target.copy(Viewer.camera.position).add(dir.multiplyScalar(dist));
+              Viewer.controls.update();
+          }
+
+          if(this.tool === 'select') { 
+              if (!e.shiftKey && !e.ctrlKey && !e.metaKey) Selection.clearSelection();
+              Selection.addNode(hit.object);
+          }
+          else if(this.navMode === 'position') {
+              const p = hit.point;
+              Viewer.camera.position.set(p.x, p.y, p.z + (Parser.modelMaxDim*0.05));
+              Viewer.controls.target.copy(p);
+              this.setNavMode('look');
+          }
+        } else {
+          if(this.tool === 'select') Selection.clearSelection();
+        }
+      });
+      
+      window.addEventListener('pointerup', () => { 
+          this.isDraggingZoom = false; 
+          document.getElementById('canvas-container').classList.remove('grabbing');
+          const cursor = document.getElementById('measure-cursor');
+          if (cursor && (!App || App.tool !== 'measure')) cursor.style.display = 'none';
+          if(this.touchTimer) { clearTimeout(this.touchTimer); this.touchTimer = null; }
+          
+          if (this.isLensDragging) {
+              this.isLensDragging = false;
+              Viewer.controls.enabled = true;
+              document.getElementById('magnifier-lens').style.display = 'none';
+              
+              if (MeasureTool.lastSnapData) {
+                  if (this.tool === 'measure') {
+                      MeasureTool.onClick(MeasureTool.lastSnapData);
+                  } else if (this.tool === 'section-pick') {
+                      const pt = MeasureTool.lastSnapData.point.clone().add(Parser.globalOffset);
+                      document.getElementById(`cut-${this.pickPlaneAxis}-enable`).checked = true;
+                      SectionManager.onEnable(this.pickPlaneAxis);
+                      SectionManager.onValue(this.pickPlaneAxis, pt[this.pickPlaneAxis]);
+                      this.setTool('select');
+                  } else if (this.tool === 'section-custom') {
+                      if (MeasureTool.lastHit) {
+                          const normalMatrix = new THREE.Matrix3().getNormalMatrix(MeasureTool.lastHit.object.matrixWorld);
+                          const worldNormal = MeasureTool.lastHit.face.normal.clone().applyMatrix3(normalMatrix).normalize();
+                          SectionManager.setCustomPlane(worldNormal, MeasureTool.lastSnapData.point);
+                          this.setTool('select');
+                      }
+                  }
+              }
+          }
+      });
+      
+      window.addEventListener('resize', () => { 
+          Viewer.perspCamera.aspect = window.innerWidth/window.innerHeight; 
+          Viewer.perspCamera.updateProjectionMatrix(); 
+          Viewer.renderer.setSize(window.innerWidth, window.innerHeight); 
+          if(Viewer.isOrtho) {
+              const aspect = window.innerWidth/window.innerHeight;
+              const height = Viewer.orthoCamera.top - Viewer.orthoCamera.bottom;
+              Viewer.orthoCamera.left = -height/2 * aspect;
+              Viewer.orthoCamera.right = height/2 * aspect;
+              Viewer.orthoCamera.updateProjectionMatrix();
+          }
+      });
+      this.animate();
+    },
+
+    setPickPlane(axis) {
+       this.pickPlaneAxis = axis;
+       this.setTool('section-pick');
+       const btns = document.querySelectorAll('.slider-pick-btn');
+       if (btns) btns.forEach(b => b.classList.remove('active'));
+       const btn = document.getElementById(`btn-pick-${axis}`);
+       if (btn) btn.classList.add('active');
+    },
+
+    onSliderChange(axis, value) {
+      SectionManager.onSlider(axis, value);
+    },
+
+    setControlSpeed(type, val) {
+        if(type === 'rotate') Viewer.controls.rotateSpeed = parseFloat(val);
+        if(type === 'zoom') Viewer.controls.zoomSpeed = parseFloat(val);
+    },
+    
+    setTool(t) {
+      this.tool = t;
+      const toolbarBtns = document.querySelectorAll('#toolbar .toolButton, .slider-pick-btn');
+      if (toolbarBtns) toolbarBtns.forEach(b => b.classList.remove('active'));
+      
+      if (t === 'section-pick' || t === 'section-custom') {
+          if (t === 'section-custom') {
+              const btn = document.getElementById('btn-section-custom');
+              if (btn) btn.classList.add('active');
+          }
+      } else {
+          const btn = document.getElementById('btn-' + t);
+          if (btn) btn.classList.add('active');
+      }
+      
+      const measureToolbar = document.getElementById('measure-toolbar');
+      const canvasContainer = document.getElementById('canvas-container');
+      if(t === 'measure') {
+          if (measureToolbar) measureToolbar.style.display = 'flex';
+          if (canvasContainer) canvasContainer.classList.add('measure-mode');
+          UI.closePanels(); 
+          this.setNavMode('orbit');
+      } else {
+          if (measureToolbar) measureToolbar.style.display = 'none';
+          if (canvasContainer) canvasContainer.classList.remove('measure-mode');
+          if (MeasureTool.snapCursor) MeasureTool.snapCursor.visible = false;
+          const magLens = document.getElementById('magnifier-lens');
+          if (magLens) magLens.style.display = 'none';
+      }
+
+      if(t === 'select') { this.setNavMode('orbit'); } 
+    },
+
+    setNavMode(m) {
+      this.navMode = m;
+      ['orbit','pan','zoom','position','look'].forEach(id => document.getElementById('nav-'+id).classList.remove('selected'));
+      document.getElementById('nav-'+m).classList.add('selected');
+      Viewer.controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+      Viewer.controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+      if(m === 'pan') { Viewer.controls.mouseButtons.LEFT = THREE.MOUSE.PAN; Viewer.controls.touches.ONE = THREE.TOUCH.PAN; } 
+      else if (m === 'look') {
+          const dir = new THREE.Vector3().subVectors(Viewer.controls.target, Viewer.camera.position).normalize();
+          Viewer.controls.target.copy(Viewer.camera.position).add(dir.multiplyScalar(0.1));
+      }
+      document.getElementById('statusTool').innerText = `Mode: ${m.charAt(0).toUpperCase()+m.slice(1)}`;
+    },
+    
+    selectNode(type, id, label, meshes) {
+        this.clearIsolation();
+        Selection.clearSelection();
+        meshes.forEach(m => Selection.addNode(m));
+    },
+    
+    isolateNode(type, id, label, meshes) {
+      this.clearIsolation();
+      Selection.clearSelection();
+      meshes.forEach(m => Selection.addNode(m));
+
+      // Record previous visibility of all meshes so we can restore hidden parts later
+      const prevVis = {};
+      const allMeshes = Parser.modelGroup.children;
+      allMeshes.forEach(m => {
+        prevVis[m.uuid] = !!m.visible;
+      });
+
+      allMeshes.forEach(m => {
+        if (meshes.includes(m)) {
+          m.visible = true;
+          m.children.forEach(c => {
+            if (c.name === 'edges') c.visible = ViewEngine.edgesVisible;
+            if (c.name === 'sectionEdges') c.visible = ViewEngine.sectionEdgesVisible && SectionManager.hasActiveClip();
+          });
+        } else {
+          m.visible = false;
+          m.children.forEach(c => c.visible = false);
+        }
+      });
+      this.isolatedNode = { type, id, label, meshes, prevVisibility: prevVis };
+        Outliner.syncUI();
+        ColorManager.renderUI();
+        this.updateEdgeColors();
+    },
+    
+    clearIsolation() {
+      if (this.isolatedNode) {
+        const prev = this.isolatedNode.prevVisibility;
+        this.isolatedNode = null;
+        if (prev) {
+          Parser.modelGroup.children.forEach(m => {
+            const wasVisible = !!prev[m.uuid];
+            m.visible = wasVisible;
+            m.children.forEach(c => {
+              if (!wasVisible) c.visible = false;
+              else {
+                if (c.name === 'edges') c.visible = ViewEngine.edgesVisible;
+                if (c.name === 'sectionEdges') c.visible = ViewEngine.sectionEdgesVisible && SectionManager.hasActiveClip();
+              }
+            });
+          });
+        } else {
+          Parser.modelGroup.children.forEach(m => {
+            m.visible = true;
+            m.children.forEach(c => {
+              if (c.name === 'edges') c.visible = ViewEngine.edgesVisible;
+              if (c.name === 'sectionEdges') c.visible = ViewEngine.sectionEdgesVisible && SectionManager.hasActiveClip();
+            });
+          });
+        }
+        Outliner.syncUI();
+        ColorManager.renderUI();
+        this.updateEdgeColors();
+      }
+    },
+    
+    selectMeshByUUID(uuid) {
+        const mesh = Parser.modelGroup.children.find(m => m.uuid === uuid);
+        if (mesh && mesh.visible) {
+            Selection.clearSelection();
+            Selection.addNode(mesh);
+        }
+    },
+
+    reapplyHiddenState() {
+        if (!this.hiddenStack || this.hiddenStack.length === 0) return;
+
+        this.hiddenStack.forEach(group => {
+            if (!Array.isArray(group)) return;
+            group.forEach(entry => {
+                const target = Parser.modelGroup.children.find(m => {
+                    const ud = m.userData || {};
+                    return m.uuid === entry.uuid ||
+                        (ud.partName === entry.partName && ud.fileSource === entry.fileSource && ud.partNo === entry.partNo);
+                });
+                if (!target) return;
+                target.visible = false;
+                target.children.forEach(c => c.visible = false);
+            });
+        });
+    },
+
+    openFile() {
+        document.getElementById('fileInput').click();
+        this._appendMode = false;
+    },
+
+    addFile() {
+        this._appendMode = true;
+        document.getElementById('fileInput').click();
+    },
+
+    setSelectionColor(hex) {
+        Selection.setHighlightColor(hex);
+        saveSettings('selectionColor', hex);
+    },
+
+    updateSun() {
+        const az = parseFloat(document.getElementById('sun-azimuth').value);
+        const el = parseFloat(document.getElementById('sun-elevation').value);
+        const intensity = parseFloat(document.getElementById('sun-intensity').value);
+        document.getElementById('sun-azimuth-val').innerText = az + '°';
+        document.getElementById('sun-elevation-val').innerText = el + '°';
+        document.getElementById('sun-intensity-val').innerText = intensity + '%';
+        Viewer.updateSun(az, el, intensity);
+        saveSettings('sun', { az, el, int: intensity });
+    },
+
+    updateFileBar() {
+        const container = document.getElementById('file-list');
+        const files = Parser.fileDataList;
+        if (files.length === 0) {
+            container.innerHTML = 'None loaded';
+            return;
+        }
+        let html = '';
+        files.forEach(f => {
+            const isEncrypted = f.name.toLowerCase().endsWith('.3dcsl');
+            html += `
+                <span class="file-chip" data-file="${f.name}" onclick="App.selectFile('${f.name}')">
+                    <span class="material-icons file-icon">${isEncrypted ? 'lock' : 'description'}</span>
+                    ${f.name}
+                    <span class="material-icons close-icon" onclick="event.stopPropagation(); App.closeFile('${f.name}')">close</span>
+                </span>
+            `;
+        });
+        container.innerHTML = html;
+    },
+
+    selectFile(fileName) {
+        const meshes = Parser.modelGroup.children.filter(m => m.userData.fileSource === fileName);
+        if (meshes.length > 0) {
+            Selection.clearSelection();
+            meshes.forEach(m => Selection.addNode(m));
+        }
+    },
+
+    closeFile(fileName) {
+        Parser.removeFile(fileName);
+        Parser.buildAllFiles();
+        Selection.clearSelection();
+    },
+
+    showThemePanel() {
+        UI.togglePanel('panel-view');
+        setTimeout(() => {
+            const themeSection = document.getElementById('theme-list');
+            if (themeSection) themeSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+    },
+
+    // =====================================================
+    // SECTION 32o: DISPLAY PROFILE & EDGE COLOR
+    // =====================================================
+    updateDisplayProfile(value) {
+        Viewer.applyDisplayProfile(value);
+    },
+    
+    setDisplayProfile(profile) {
+        let size = 24;
+        switch(profile) {
+            case 'mobile': size = 6; break;
+            case 'laptop': size = 15; break;
+            case 'desktop': size = 24; break;
+            case 'cinema': size = 32; break;
+            default: size = 24;
+        }
+        document.getElementById('screen-size-slider').value = size;
+        Viewer.applyDisplayProfile(size);
+    },
+    
+    updateThickLine(value) {
+        Viewer.applyThickLine(value);
+    },
+
+    // =====================================================
+    // SECTION 32p: EDGE LINE COLOR ENGINE (for LineSegments)
+    // =====================================================
+    updateEdgeColors() {
+        const mode = document.getElementById('edge-color-mode').value;
+        const solidColor = document.getElementById('edge-solid-color').value;
+        const colorObj = new THREE.Color(solidColor);
+
+        Parser.modelGroup.children.forEach(mesh => {
+            let edgeLine = null;
+            mesh.children.forEach(child => {
+                if (child.name === 'edges' && child.isLineSegments) {
+                    edgeLine = child;
+                }
+            });
+            if (!edgeLine) return;
+
+            if (mode === 'solid') {
+                edgeLine.material.color.copy(colorObj);
+                edgeLine.material.vertexColors = false;
+            } else if (mode === 'material') {
+                edgeLine.material.color.copy(mesh.material.color);
+                edgeLine.material.vertexColors = false;
+            } else if (mode === 'axis') {
+                // Use vertex colors for axis coloring – only for LineSegments
+                // We need to create a color attribute per vertex (two per segment)
+                const geo = edgeLine.geometry;
+                const pos = geo.attributes.position;
+                if (!pos) return;
+                const count = pos.count;
+                const colors = new Float32Array(count * 3);
+                for (let i = 0; i < count; i += 2) {
+                    const p1 = new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i));
+                    const p2 = new THREE.Vector3(pos.getX(i+1), pos.getY(i+1), pos.getZ(i+1));
+                    const dir = new THREE.Vector3().subVectors(p2, p1).normalize();
+                    const ax = Math.abs(dir.x), ay = Math.abs(dir.y), az = Math.abs(dir.z);
+                    let r, g, b;
+                    if (ax >= ay && ax >= az) {
+                        r = 1; g = 0; b = 0; // X = Red
+                    } else if (ay >= ax && ay >= az) {
+                        r = 0; g = 1; b = 0; // Y = Lime Green
+                    } else {
+                        r = 0; g = 0; b = 1; // Z = Blue
+                    }
+                    colors[i*3] = r; colors[i*3+1] = g; colors[i*3+2] = b;
+                    colors[(i+1)*3] = r; colors[(i+1)*3+1] = g; colors[(i+1)*3+2] = b;
+                }
+                geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+                edgeLine.material.vertexColors = true;
+                geo.attributes.color.needsUpdate = true;
+            }
+            edgeLine.material.needsUpdate = true;
+        });
+    },
+
+    animate() { 
+        requestAnimationFrame(() => this.animate()); 
+        Viewer.controls.update(); 
+        Viewer.updateAxesScreenSize(); 
+        // rotate emblem if present
+        if (Viewer.emblemLoaded && Viewer.emblemGroup) Viewer.emblemGroup.rotation.z += 0.01;
+        Viewer.renderer.render(Viewer.scene, Viewer.camera); 
+        if(this.tool === 'measure' || this.tool === 'section-pick' || this.tool === 'section-custom') 
+            MeasureTool.updateLabelPos(); 
+    }
+  };
+
+  // =====================================================
+  // SECTION 32q: INITIALIZATION
+  // =====================================================
+  const savedSelectionColor = loadSettings('selectionColor', '#ef5350');
+  document.getElementById('selection-color-picker').value = savedSelectionColor;
+  Selection.setHighlightColor(savedSelectionColor);
+
+  document.getElementById('edge-color-mode').value = 'solid';
+  document.getElementById('edge-solid-color').value = '#000000';
+  if (document.getElementById('section-edge-weight')) document.getElementById('section-edge-weight').value = '2.0';
+  if (typeof ViewEngine !== 'undefined' && ViewEngine.updateSectionEdgeLineWeight) ViewEngine.updateSectionEdgeLineWeight(2.0);
+
+  document.addEventListener('contextmenu', e => e.preventDefault(), { passive: false });
+document.addEventListener('touchstart', e => {
+  if (e.target.closest && e.target.closest('#canvas-container')) {
+    e.preventDefault();
+  }
+}, { passive: false });
+window.addEventListener('DOMContentLoaded', () => App.init());
+</script>
+
+<div id="panel-projects" class="side-panel">
+  <div class="panelTitle">Projects 
+    <button class="panelClose" onclick="UI.togglePanel('panel-projects')"><span class="material-icons">close</span></button>
+  </div>
+  <div id="project-container" style="padding: 10px;">
+    <div style="color:var(--accent);">Loading projects from server...</div>
+  </div>
+</div>
+
+<script>
+const ProjectManager = {
+    init() {
+        const container = document.getElementById('project-container');
+        if (!container) return;
+        container.innerHTML = '<div style="color:var(--accent); padding:10px;">No project server available in static preview.</div>';
+    },
+
+    buildTree(data, parentElement) {
+        parentElement.innerHTML = ''; 
+        
+        data.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'proj-item';
+            
+            if (item.type === 'folder') {
+                row.innerHTML = `<div style="display:flex;align-items:center;"><span class="material-icons">folder</span> ${item.name}</div><span class="material-icons">expand_more</span>`;
+                
+                const nestedContainer = document.createElement('div');
+                nestedContainer.className = 'proj-folder';
+                this.buildTree(item.contents, nestedContainer);
+                
+                row.onclick = () => {
+                    nestedContainer.classList.toggle('open');
+                    row.querySelector('span:last-child').innerText = nestedContainer.classList.contains('open') ? 'expand_less' : 'expand_more';
+                };
+                parentElement.appendChild(row);
+                parentElement.appendChild(nestedContainer);
+            } 
+            else if (item.type === 'file') {
+                row.innerHTML = `<div style="display:flex;align-items:center;"><span class="material-icons">insert_drive_file</span> ${item.name}</div>`;
+                
+                const openBtn = document.createElement('button');
+                openBtn.className = 'proj-open-btn';
+                openBtn.innerText = 'Open';
+                
+                row.onclick = () => {
+                    document.querySelectorAll('.proj-open-btn').forEach(btn => btn.style.display = 'none');
+                    openBtn.style.display = 'block';
+                };
+                
+                openBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    console.log("Downloading file from server:", item.name);
+                    openBtn.innerText = "Loading...";
+                    
+                    fetch('/' + item.path)
+                        .then(response => response.blob())
+                        .then(blob => {
+                            const fileData = new File([blob], item.name);
+                            
+                            // UNIVERSAL FILE LOADER HACK
+                            // This finds the hidden file input in your app and fakes a user upload
+                            const fileInputs = document.querySelectorAll('input[type="file"]');
+                            if (fileInputs.length > 0) {
+                                const fileInput = fileInputs[0];
+                                const dataTransfer = new DataTransfer();
+                                dataTransfer.items.add(fileData);
+                                fileInput.files = dataTransfer.files;
+                                
+                                // Trigger the change event so the viewer loads it
+                                fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                            } 
+                            // Fallback if the input isn't found
+                            else if(typeof App !== 'undefined' && App.loadFile) {
+                                App.loadFile(fileData);
+                            } else {
+                                console.error("Could not find a way to load the file into the viewer.");
+                                alert("File downloaded, but couldn't find the viewer's file input.");
+                            }
+                            
+                            openBtn.innerText = "Open"; 
+                        })
+                        .catch(err => {
+                            console.error("Failed to load file:", err);
+                            openBtn.innerText = "Error";
+                        });
+                };
+                
+                row.appendChild(openBtn);
+                parentElement.appendChild(row);
+            }
+        });
+    }
+};
+
+setTimeout(() => ProjectManager.init(), 1000);
+</script>
+</body>
+</html>

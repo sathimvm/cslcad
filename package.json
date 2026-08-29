@@ -1,0 +1,13 @@
+{
+  "name": "csl-cad-view-worked1-server",
+  "version": "1.0.0",
+  "description": "Local server to save uploaded projects into the projects folder",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "multer": "^1.4.5"
+  }
+}
