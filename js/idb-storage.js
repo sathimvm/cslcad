@@ -18,14 +18,15 @@
     return dbP;
   }
 
-  async function saveFiles(files){
+  async function saveFiles(files, basePath){
     const db = await openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(STORE, 'readwrite');
       const s = tx.objectStore(STORE);
       const saved = [];
       Array.from(files).forEach(f => {
-        const path = f.webkitRelativePath || f.name;
+        const sub = f.webkitRelativePath || f.name;
+        const path = basePath ? (basePath + '/' + sub) : sub;
         const rec = { path, name: f.name, type: f.type, size: f.size, lastModified: f.lastModified, blob: f };
         s.put(rec);
         saved.push(path);
